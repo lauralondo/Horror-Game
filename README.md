@@ -18,3 +18,14 @@ OpenGL horror game
  		[spacebar] 	jump
    	   	   [h]		show / hide help menu
  		  [esc]		quit
+
+
+project must incorporate:
+- non-trivial 3D modeling,
+- moving through a complex scene,
+- animation,
+- lighting,
+- texture mapping,
+- ray casting (a simplified form of ray tracing)
+- shadows
+- reflections
