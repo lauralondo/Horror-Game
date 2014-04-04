@@ -1,5 +1,5 @@
 /*
- *	test program to model a character
+ *	Horror Game
  */
 
 #include <GL/glut.h>
@@ -8,26 +8,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define screenWidth 1000
-#define screenHeight 700
+#define screenWidth 1000	//initial screem width
+#define screenHeight 700	//initial screen height
 #define PI 3.14159265		//pi
-#define groundSize 20.0 	//size of the ground grid
-#define waitTime 16
-#define movementSpeed 0.1
+#define groundSize 20 		//size of the ground grid
+#define waitTime 16 		//millisecond wait between redisplays
+#define movementSpeed 0.1 	//player movement speed
 
 
 float xpos = 0, ypos=0, zpos = 10;				//camera position
 float xrot=0, yrot=0;							//camera angle
 float xrotChange, yrotChange = 0;				//camera view attributes
 
-int w_state, a_state, s_state,
-	d_state, q_state, e_state = 0;					//key presses
-int mousePressed, mouseStartX, mouseStartY = 0;		//mouse states
+int w_state, a_state, s_state,					//key presses
+	d_state, q_state, e_state = 0;
+int mousePressed, mouseStartX, mouseStartY = 0;	//mouse states
 
-int jumpRising=0;
-float jumpSpeed=0;						//jump height increasing
+int jumpRising=0;								//if jumping up
+float jumpSpeed=0;								//jump height increasing
 
-int helpMenu = 1;
+int helpMenu = 1;								//true if displaying menu
 
 
 //Function to write a string to the screen at a specified location
@@ -43,7 +43,7 @@ void bitmapText(float x, float y, float z, char* words) {
 }
 
 
-//switches to 2D when true in order to draw on the front of the screen for the menu
+//switches to 2D when true to draw on the front of the screen for the menu
 void menuMode(int flag) {
 	if(flag == 1) {
 		glMatrixMode(GL_PROJECTION);
@@ -66,39 +66,63 @@ void menuMode(int flag) {
 }
 
 
+// draws the menu in menu mode if the help menu is toggled on
 void menu(void) {
 	if(helpMenu) {
 		menuMode(1); 						//go into menu mode (switch to 2D)
 
-		float menuPosX = 700, menuPosY=570;	//menu start position
+		float mPosX = 700, mPosY=570;		//menu start position
 		glColor3f(0.8,0.8,0.8);
 
-		bitmapText(menuPosX,menuPosY, 0, "MENU");
+		bitmapText(mPosX+95,mPosY+100, 0,              "MENU");
+											//____________________________
+		glBegin(GL_LINES);					    //line underneath "MENU"
+		glVertex3f(mPosX, mPosY+90, 0);
+		glVertex3f(mPosX+250, mPosY+90, 0);
+		glEnd();
+
+		bitmapText(mPosX+10,mPosY+50, 0,     "mouse click & drag to rotate");
+
+		bitmapText(mPosX+90,mPosY, 0,                  "forward");
+		bitmapText(mPosX, mPosY-25, 0, "rotate  [q]      [w]      [e]  rotate");
+
+		bitmapText(mPosX+23,mPosY-75,0, "left  [a]       [s]      [d]  right");
+		bitmapText(mPosX+105,mPosY-100, 0,              "back");
+
+		bitmapText(mPosX+80,mPosY-150, 0,	         "[spacebar]");
+		bitmapText(mPosX+105,mPosY-175, 0,	            "jump");
+
+		bitmapText(mPosX+111,mPosY-225, 0,	            "[h]");
+		bitmapText(mPosX+30,mPosY-250, 0,	   "show / hide this menu");
+
+		bitmapText(mPosX+102,mPosY-300, 0,	           "[esc]");
+		bitmapText(mPosX+105,mPosY-325, 0,	            "quit");
 
 		menuMode(0);						//switch back to 3D mode
 	}
 }
 
-//Model the ground. consiste of a flat gorund color and a grid
+
+//Models the ground. consists of a flat gorund color and a grid
 void ground(void) {
 	glColor3f(0,0,0);		//grid color
 	glLineWidth(1);			//line width
 
 	//draw grid
-	for (int i = 0; i < groundSize*2+1; i++) {
+	for (int i = 0; i < groundSize*2+1; i++) { 		//lines along x-axis
 		glBegin(GL_LINES);
 			glVertex3f(-groundSize + i, 0, groundSize);
 			glVertex3f(-groundSize + i, 0, -groundSize);
 		glEnd();
 	}
-	for (int j = 0; j < groundSize*2+1; j++) {
+	for (int j = 0; j < groundSize*2+1; j++) {		//lines along z-axis
 		glBegin(GL_LINES);
 			glVertex3f(-groundSize, 0, groundSize - j);
 			glVertex3f(groundSize, 0, groundSize - j);
 		glEnd();
 	}
 
-	//draw ground color under the grid
+	//draw flat ground color under the grid
 	glBegin(GL_POLYGON);
 	glColor3f(0.1,0.2,0.05);
 	glVertex3f(-groundSize, -0.1, -groundSize);
@@ -109,7 +133,7 @@ void ground(void) {
 }
 
 
-
+//display callack.
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  	glLoadIdentity();
@@ -199,7 +223,7 @@ void motion(int x, int y) {
 }
 
 
-//applies key press movements and rotation changes and redraws the world at set intervals
+//applies movements and rotation changes and redraws the world at set intervals
 void timer(int value) {
 	//rotation angles = permanent rotation + temporary rotation
 	float newxrot = xrot + xrotChange;
@@ -266,7 +290,7 @@ void timer(int value) {
 }
 
 
-//reshape callback. adjusts both the clipping box and viewport. keeps proportions unchanged
+//reshape callback. adjusts the clipping box & viewport. keeps proportions
 void reshape(int w, int h) {
 	float left = -0.1, right = 0.1, bottom = -0.1, top = 0.1, znear = 0.1, zfar = 150;
 	float ratio = (float)h / (float)w;
@@ -288,16 +312,17 @@ int main(int argc, char **argv) {
 	glutInit(&argc, argv);
  	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
  	glutInitWindowSize(screenWidth, screenHeight);
- 	glutCreateWindow("Thing");
+ 	glutCreateWindow("Nightmare");
  	glEnable(GL_DEPTH_TEST);
  	glClearColor(0,0,0,0);
 
- 	//glutIgnoreKeyRepeat(1);		// disables glut from simulating key press and release
- 								// repetitions when holding down a key
-
-
- 	glutDisplayFunc(display);
+ 	glutIgnoreKeyRepeat(1);	// disables glut from simulating key press and
+ 							// release repetitions when holding down a key
+ 	//event callbacks
+ 	glutDisplayFunc(display);			//display
  	glutReshapeFunc(reshape);			//reshape window
+ 	glutMouseFunc(mouse);				//mouse button clicks
+ 	glutMotionFunc(motion);				//mouse click movement
  	glutKeyboardFunc(keyboard);			//key presses
  	glutKeyboardUpFunc(keyboardUp);		//key release
  	glutTimerFunc(waitTime, timer, 1);	//redraws world at intervals
