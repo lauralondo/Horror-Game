@@ -1,6 +1,11 @@
 NIGHTMARE
 =========
 
+*You open your eyes one night, and realize… this is not your room. Where are you? How did you get here? When did this happen? How do you get out?! You embark on a journey to unravel the mysteries of this strange place.
+
+...Good luck.*
+
+
 OpenGL horror game
 
 
@@ -18,6 +23,7 @@ OpenGL horror game
  		[spacebar] 	jump
    	   	   [h]		show / hide help menu
  		  [esc]		quit
+
 
 
 project must incorporate:
