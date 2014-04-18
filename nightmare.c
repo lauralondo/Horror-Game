@@ -1,6 +1,23 @@
 /*
- *	Horror Game
+ *	[Horror Game]
+ *
+ *	[description]
+ *
+ * 	Directions:
+ *		[w] move forward
+ *		[s] move backwards
+ *		[a] strafe left
+ *		[d] strafe right
+ *
+ *		[mouse click & drag] look around
+ *		OR 		[q] look left
+ *				[e] look right      (but really, its much nicer with the mouse)
+ *
+ *		[spacebar] 	jump
+ *  	   [h]		show / hide help menu
+ *		  [esc]		quit
  */
+
 
 #include <GL/glut.h>
 #include <math.h>
@@ -15,6 +32,8 @@
 #define waitTime 16 		//millisecond wait between redisplays
 #define movementSpeed 0.1 	//player movement speed
 
+
+int textures[1];								//the loaded textures
 
 float xpos = 0, ypos=0, zpos = 10;				//camera position
 float xrot=0, yrot=0;							//camera angle
@@ -40,12 +59,12 @@ void bitmapText(float x, float y, float z, char* words) {
 	for(int i = 0; i < len; i++) {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18,words[i]);
 	}
-}
+} //end bitmapText
 
 
 //switches to 2D when true to draw on the front of the screen for the menu
 void menuMode(int flag) {
-	if(flag == 1) {
+	if(flag == 1) { //if true, enable 2D mode
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
 		glLoadIdentity();
@@ -56,14 +75,14 @@ void menuMode(int flag) {
 		glLoadIdentity();
 		glDisable(GL_DEPTH_TEST);
 	}
-	else {
+	else {	//else, resume 3D mode
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();
 		glMatrixMode(GL_MODELVIEW);
 		glPopMatrix();
 		glEnable(GL_DEPTH_TEST);
 	}
-}
+} //end menuMode
 
 
 // draws the menu in menu mode if the help menu is toggled on
@@ -100,7 +119,118 @@ void menu(void) {
 
 		menuMode(0);						//switch back to 3D mode
 	}
-}
+} //end menu
+
+
+//Loads a texture from an external image file in .bmp format.
+void LoadTex(GLuint texture, char *s) {
+	//unsigned int Texture;
+	FILE* img = NULL;
+	img = fopen(s,"rb");
+	unsigned long bWidth = 0;
+	unsigned long bHeight = 0;
+	unsigned long size = 0;
+
+	// Format specific stuff
+	fseek(img,18,SEEK_SET);
+	fread(&bWidth,4,1,img);
+	fread(&bHeight,4,1,img);
+	fseek(img,0,SEEK_END);
+	size = ftell(img) - 54;
+
+	unsigned char *data = (unsigned char*)malloc(size);
+
+	fseek(img,54,SEEK_SET);	// image data
+	fread(data,size,1,img);
+	fclose(img);
+
+	//glGenTextures(2, textures);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+
+	// Sets the wrap parameters in both directions
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+
+	gluBuild2DMipmaps(GL_TEXTURE_2D, 3, bWidth, bHeight,
+					  GL_BGR_EXT, GL_UNSIGNED_BYTE, data);
+
+
+	if (data)		//free allocated space
+		free(data);
+} //end LoadTex
+
+
+//texture initializations
+void initTex(void) {
+	//Specifies the alignment requirement
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	//generate textures
+	glGenTextures(1, textures);
+	LoadTex(textures[0], "textures/woodplanks1.bmp");
+} //end initTex
+
+
+//creates a flat, textured rectangle
+void texRect(void) {
+	glEnable(GL_TEXTURE_2D);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0); glVertex3f(-1.0, -1.0, 0.0);
+		glTexCoord2f(0.0, 1.0); glVertex3f(-1.0, 1.0, 0.0);
+		glTexCoord2f(1.0, 1.0); glVertex3f(1.0, 1.0, 0.0);
+		glTexCoord2f(1.0, 0.0); glVertex3f(1.0, -1.0, 0.0);
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
+} //end flatTex
+
+
+//creates a flat, textured circle
+void texCircle(int segments) {
+	float cx=0, cy=0, cz=0;				//center point
+	float radius = 1;					//radius of the circle
+
+	//generate the first point along the radius
+	float phi = 0;
+	float x1 = radius * cos(phi) + cx;
+	float z1 = radius * sin(phi) + cz;
+	float first[3] = {x1, 0, z1};			//the first circle vertex
+	float tx1 = 0.5 * cos(phi) + 0.5;
+	float ty1 = 0.5 * sin(phi) + 0.5;
+	float tFirst[2] = {tx1, ty1};			//the first texture vertex
+
+	//loop throuhg all segments of the circle
+	for (int i = 0; i<segments; i++) {		//for every segment,
+		phi = 2 * PI * (i+1) / segments;
+		x1 = radius * cos(phi) + cx;
+		z1 = radius * sin(phi) + cz;
+		float next[] = {x1, 0, z1};			//get the next circle vertex
+		tx1 = 0.5 * cos(phi) + 0.5;
+		ty1 = 0.5 * sin(phi) + 0.5;
+		float tNext[2] = {tx1, ty1};		//get next texture vertex
+
+		//draw top of the stump
+		glBegin(GL_POLYGON);
+			glTexCoord2f(0.5,0.5);
+			glVertex3f(cx, 0, cz);
+			glTexCoord2fv(tFirst);
+			glVertex3fv(first);
+			glTexCoord2fv(tNext);
+			glVertex3fv(next);
+		glEnd();
+
+		//next point becomes the first for the next interation
+		first[0] = next[0];
+		first[1] = next[1];
+		first[2] = next[2];
+		tFirst[0] = tNext[0];
+		tFirst[1] = tNext[1];
+	}
+} //end texCircle
 
 
 //Models the ground. consists of a flat gorund color and a grid
@@ -130,8 +260,16 @@ void ground(void) {
 	glVertex3f(groundSize, -0.1, groundSize);
 	glVertex3f(groundSize, -0.1, -groundSize);
 	glEnd();
-}
+} //end ground
 
+
+
+
+
+
+//______________________________________________________________________________
+//================================= CALLBACKS ==================================
+//______________________________________________________________________________
 
 //display callack.
 void display(void) {
@@ -150,7 +288,7 @@ void display(void) {
 	menu();
 
 	glutSwapBuffers();
-}
+} //end display
 
 
 //sets key press states to true when the key gets pressed
@@ -172,7 +310,7 @@ void keyboard(unsigned char key, int x, int y) {
    		else helpMenu = 1;
    	}
    	if((int)key == 27) exit(0);		//exit program
-}
+} //end keyboard
 
 
 //sets the key press states to false when the key is released
@@ -183,7 +321,7 @@ void keyboardUp(unsigned char key, int x, int y) {
 	if(key == 's') s_state = 0;		//stop move backwards
 	if(key == 'e') e_state = 0;		//stop rotate right
 	if(key == 'q') q_state = 0;		//stop rotate left
-}
+} //end keyboardUp
 
 
 // Handles the begining and end of a left mouse click for view rotation.
@@ -202,7 +340,8 @@ void mouse(int butt, int state, int x,  int y) {
 		yrot += yrotChange;			//apply the y rotation change to make it permanent
 		xrotChange = yrotChange = 0;//reset temporary rotation change to 0
 	}
-}
+} //end mouse
+
 
 // Changes the temporary view rotation while the left mouse button is pressed.
 // The temporary rotation angle is proportional to the distance of the mouse
@@ -220,7 +359,7 @@ void motion(int x, int y) {
 		}
 		yrotChange = (float)(x - mouseStartX)/3.0;	//set the temp y-axis rot to the mouse x distance
 	}
-}
+} //end motion
 
 
 //applies movements and rotation changes and redraws the world at set intervals
@@ -287,7 +426,7 @@ void timer(int value) {
 
 	glutPostRedisplay();						//redraw scene
 	glutTimerFunc(waitTime, timer, 1);			//set next timer
-}
+} //end timer
 
 
 //reshape callback. adjusts the clipping box & viewport. keeps proportions
@@ -305,9 +444,18 @@ void reshape(int w, int h) {
 			bottom, top, znear, zfar);
 
 	glMatrixMode(GL_MODELVIEW);
-}
+} //end reshape
 
 
+
+
+
+
+//______________________________________________________________________________
+//==================================== MAIN ====================================
+//______________________________________________________________________________
+
+//main function
 int main(int argc, char **argv) {
 	glutInit(&argc, argv);
  	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
@@ -329,4 +477,4 @@ int main(int argc, char **argv) {
 
  	glutMainLoop();
 	return 0;
-}
+} //end main
