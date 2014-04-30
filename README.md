@@ -49,3 +49,9 @@ This project will be a first-person exploration/thriller/horror game.
 - Ray casting will be used to implement collision detection allowing the player to move around the mansion without walking through walls or other objects.
 - Because there will be lighting from various sources we will need to also render shadows.
 - We will have a mirror
+
+###Revision  4-28-14
+-only building 2 rooms
+-no shadows
+-small number of object. ~4
+-model the player in reflection
