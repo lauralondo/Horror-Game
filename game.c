@@ -11,7 +11,7 @@
  *
  *		[mouse click & drag] look around
  *		OR 		[q] look left
- *				[e] look right
+ *				[e] look right      (but really, its much nicer with the mouse)
  *
  *		[spacebar] 	jump
  *  	   [h]		show / hide help menu
@@ -33,7 +33,7 @@
 #define movementSpeed 0.1 	//player movement speed
 
 
-int textures[1];								//the loaded textures
+int textures[2];								//the loaded textures
 
 float xpos = 0, ypos=0, zpos = 10;				//camera position
 float xrot=0, yrot=0;							//camera angle
@@ -46,9 +46,7 @@ int mousePressed, mouseStartX, mouseStartY = 0;	//mouse states
 int jumpRising=0;								//if jumping up
 float jumpSpeed=0;								//jump height increasing
 
-int helpMenu = 0;								//true if displaying menu
-
-float somePosX=0, somePosY=3, somePosZ=0;
+int helpMenu = 1;								//true if displaying menu
 
 
 //Function to write a string to the screen at a specified location
@@ -149,7 +147,7 @@ void LoadTex(GLuint texture, char *s) {
 	//glGenTextures(2, textures);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
-	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 
 	// Sets the wrap parameters in both directions
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -173,19 +171,32 @@ void initTex(void) {
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	//generate textures
-	glGenTextures(1, textures);
+	glGenTextures(2, textures);
 	LoadTex(textures[0], "textures/woodplanks1.bmp");
+	LoadTex(textures[1], "textures/dirt2.bmp");
 } //end initTex
 
 
 //creates a flat, textured rectangle
-void texRect(float size, float texSize) {
+void texRect(void) {
+	glEnable(GL_TEXTURE_2D);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0); glVertex3f(-1.0, -1.0, 0.0);
+		glTexCoord2f(0.0, 1.0); glVertex3f(-1.0, 1.0, 0.0);
+		glTexCoord2f(1.0, 1.0); glVertex3f(1.0, 1.0, 0.0);
+		glTexCoord2f(1.0, 0.0); glVertex3f(1.0, -1.0, 0.0);
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
+} //end flatTex
+
+//creates a flat, textured rectangle
+void texRect2(float size) {
 	glEnable(GL_TEXTURE_2D);
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0, 0.0); glVertex3f(-size, -size, 0.0);
-		glTexCoord2f(0.0, texSize); glVertex3f(-size, size, 0.0);
-		glTexCoord2f(texSize, texSize); glVertex3f(size, size, 0.0);
-		glTexCoord2f(texSize, 0.0); glVertex3f(size, -size, 0.0);
+		glTexCoord2f(0.0, size); glVertex3f(-size, size, 0.0);
+		glTexCoord2f(size, size); glVertex3f(size, size, 0.0);
+		glTexCoord2f(size, 0.0); glVertex3f(size, -size, 0.0);
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
 } //end flatTex
@@ -193,7 +204,6 @@ void texRect(float size, float texSize) {
 
 //creates a flat, textured circle
 void texCircle(int segments) {
-	glEnable(GL_TEXTURE_2D);
 	float cx=0, cy=0, cz=0;				//center point
 	float radius = 1;					//radius of the circle
 
@@ -233,13 +243,12 @@ void texCircle(int segments) {
 		tFirst[0] = tNext[0];
 		tFirst[1] = tNext[1];
 	}
-	glDisable(GL_TEXTURE_2D);
 } //end texCircle
 
 
 //Models the ground. consists of a flat gorund color and a grid
 void ground(void) {
-	glColor3f(0,0.5,0.2);		//grid color
+	glColor3f(1,0,0);		//grid color
 	glLineWidth(1);			//line width
 
 	//draw grid
@@ -265,63 +274,8 @@ void ground(void) {
 	glVertex3f(groundSize, -0.1, groundSize);
 	glVertex3f(groundSize, -0.1, -groundSize);
 	glEnd();
-	//*/
+	*/
 } //end ground
-
-
-//define light 1
-void light0(void) {
-	GLfloat light_ambient1[]={0.1, 0.1, 0.1, 1.0};
-	GLfloat light_diffuse1[]={1.0, 0.0, 0.0, 1.0};
-	GLfloat light_specular1[]={0.5, 0.0, 0.0, 1.0};
-	//GLfloat position1[] = { 0, 5, 0, 1.0};
-	/* Set up ambient, diffuse, and specular components for light 0 */
-	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient1);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse1);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular1);
-	//glLightfv (GL_LIGHT1, GL_POSITION, position1);
-}
-
-
-void texBox(void) {
-	//front
-	texRect(1,1);
-
-	//top
-	glPushMatrix();
-	glTranslatef(0,1,1);
-	glRotatef(90,1,0,0);
-	texRect(1,1);
-	glPopMatrix();
-
-	//side
-	glPushMatrix();
-	glTranslatef(1,0,1);
-	glRotatef(-90,0,1,0);
-	texRect(1,1);
-	glPopMatrix();
-
-	//back
-	glPushMatrix();
-	glTranslatef(0,0,2);
-	glRotatef(180,0,1,0);
-	texRect(1,1);
-	glPopMatrix();
-
-	//bottom
-	glPushMatrix();
-	glTranslatef(0,-1,1);
-	glRotatef(-90,1,0,0);
-	texRect(1,1);
-	glPopMatrix();
-
-	glPushMatrix();
-	glTranslatef(-1,0,1);
-	glRotatef(90,0,1,0);
-	texRect(1,1);
-	glPopMatrix();
-
-}
 
 
 
@@ -337,7 +291,6 @@ void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  	glLoadIdentity();
 
- 	//camera view
  	glRotatef(xrot+xrotChange, 1,0,0);	//viewer x rotation
  	glRotatef(yrot+yrotChange, 0,1,0);	//viewer y rotation
  	glTranslatef(-xpos,-ypos,-zpos);	//viewer position
@@ -345,35 +298,21 @@ void display(void) {
 
 	ground();							//draw ground
 
-
-
-
-	//lighting
-	GLfloat position0[] = { somePosX, somePosY, somePosZ, 1.0};
-	glLightfv (GL_LIGHT0, GL_POSITION, position0);
-	glColor3f(1,1,1);
-	//draw sphere for light 0
-	glPushMatrix();
-	glTranslatef(somePosX,somePosY, somePosZ);
-	glutSolidSphere(0.05,10,10);
-	glPopMatrix();
-	glEnable(GL_LIGHTING);
-
-	//scene
-	glPushMatrix();
-	glTranslatef(0, 1, 0);
-	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	texBox();
-	glPopMatrix();
-
+	//room 1
 	glPushMatrix();
 	glRotatef(90,1,0,0);
-	texRect(5,5);
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	texRect2(13);
 	glPopMatrix();
 
-	glDisable(GL_LIGHTING);
+	//room 2
+	glPushMatrix();
+	glRotatef(90,1,0,0);
+	glTranslatef(26,0,0);
+	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	texRect2(13);
+	glPopMatrix();
 
-	//menu
 	menu();
 
 	glutSwapBuffers();
@@ -411,26 +350,6 @@ void keyboardUp(unsigned char key, int x, int y) {
 	if(key == 'e') e_state = 0;		//stop rotate right
 	if(key == 'q') q_state = 0;		//stop rotate left
 } //end keyboardUp
-
-
-//arrow keys used to move the worm
-void specialKey(int key, int x, int y) {
-	//make worm crawl (moves the head only. other segments follow)
-   	//also resets the rotation
-   	if(key == GLUT_KEY_UP) {
-   		somePosX += 0.5;
-   	}
-   	if(key == GLUT_KEY_DOWN) {
-   		somePosX -= 0.5;
-   	}
-   	if(key == GLUT_KEY_RIGHT) {
-   		somePosZ += 0.5;
-   	}
-   	if(key == GLUT_KEY_LEFT) {
-   		somePosZ -= 0.5;
-   	}
-   	//glutPostRedisplay();
-} //end specialKey
 
 
 // Handles the begining and end of a left mouse click for view rotation.
@@ -569,21 +488,16 @@ int main(int argc, char **argv) {
 	glutInit(&argc, argv);
  	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
  	glutInitWindowSize(screenWidth, screenHeight);
- 	glutCreateWindow("Horror Game");
+ 	glutCreateWindow("Nightmare");
  	glEnable(GL_DEPTH_TEST);
  	glClearColor(0,0,0,0);
 
- 	glShadeModel(GL_FLAT);
- 	//glShadeModel (GL_SMOOTH);
- 	glEnable(GL_LIGHTING);
-   	light0();
-   	glEnable(GL_LIGHT0);
-
-
- 	initTex();
-
  	glutIgnoreKeyRepeat(1);	// disables glut from simulating key press and
  							// release repetitions when holding down a key
+
+ 	initTex();				//create the textures (saved in textures arrray)
+
+
  	//event callbacks
  	glutDisplayFunc(display);			//display
  	glutReshapeFunc(reshape);			//reshape window
@@ -591,7 +505,6 @@ int main(int argc, char **argv) {
  	glutMotionFunc(motion);				//mouse click movement
  	glutKeyboardFunc(keyboard);			//key presses
  	glutKeyboardUpFunc(keyboardUp);		//key release
- 	glutSpecialFunc(specialKey);
  	glutTimerFunc(waitTime, timer, 1);	//redraws world at intervals
 
  	glutMainLoop();
