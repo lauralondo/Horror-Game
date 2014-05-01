@@ -190,13 +190,13 @@ void texRect(void) {
 } //end flatTex
 
 //creates a flat, textured rectangle
-void texRect2(float size) {
+void texRect2(float width, float height) {
 	glEnable(GL_TEXTURE_2D);
 	glBegin(GL_QUADS);
-		glTexCoord2f(0.0, 0.0); glVertex3f(-size, -size, 0.0);
-		glTexCoord2f(0.0, size); glVertex3f(-size, size, 0.0);
-		glTexCoord2f(size, size); glVertex3f(size, size, 0.0);
-		glTexCoord2f(size, 0.0); glVertex3f(size, -size, 0.0);
+		glTexCoord2f(0.0, 0.0); glVertex3f(-width, -height, 0.0);
+		glTexCoord2f(0.0, height); glVertex3f(-width, height, 0.0);
+		glTexCoord2f(width, height); glVertex3f(width, height, 0.0);
+		glTexCoord2f(width, 0.0); glVertex3f(width, -height, 0.0);
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
 } //end flatTex
@@ -302,16 +302,100 @@ void display(void) {
 	glPushMatrix();
 	glRotatef(90,1,0,0);
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	texRect2(13);
+	texRect2(13,13);
 	glPopMatrix();
+
+
+	//room 1 wall
+	glPushMatrix();
+	glTranslatef(0,8,-13);
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	texRect2(13,8);
+	glPopMatrix();
+
+	//room 1 wall
+	glPushMatrix();
+	glTranslatef(0,8,13);
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	texRect2(13,8);
+	glPopMatrix();
+
+
+	//room 1 wall
+	glPushMatrix();
+	glRotatef(90, 0,1,0);
+	glTranslatef(0,8,-13);
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	texRect2(13,8);
+	glPopMatrix();
+
+
+	//room 1 ceiling
+	glPushMatrix();
+	glTranslatef(0,16,0);
+	glRotatef(90, 1,0,0);
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	texRect2(13,13);
+	glPopMatrix();
+
+
+
+
+
+
+
+
+
+
+
+
 
 	//room 2
 	glPushMatrix();
 	glRotatef(90,1,0,0);
 	glTranslatef(26,0,0);
 	glBindTexture(GL_TEXTURE_2D, textures[1]);
-	texRect2(13);
+	texRect2(13,13);
 	glPopMatrix();
+
+	//room 2 wall
+	glPushMatrix();
+	glTranslatef(26,8,13);
+	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	texRect2(13,8);
+	glPopMatrix();
+
+	//room 2 wall
+	glPushMatrix();
+	glTranslatef(26,8,-13);
+	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	texRect2(13,8);
+	glPopMatrix();
+
+	/*//room 2 wall
+	glPushMatrix();
+	glRotatef(90, 0,1,0);
+	glTranslatef(0,13,13);
+	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	texRect2(13,13);
+	glPopMatrix();
+	*/
+		//room 2 wall
+	glPushMatrix();
+	glRotatef(90, 0,1,0);
+	glTranslatef(0,8,39);
+	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	texRect2(13,8);
+	glPopMatrix();
+
+	//room 1 ceiling
+	glPushMatrix();
+	glTranslatef(26,16,0);
+	glRotatef(90, 1,0,0);
+	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	texRect2(13,13);
+	glPopMatrix();
+
 
 	menu();
 
