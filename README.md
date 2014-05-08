@@ -55,3 +55,21 @@ This project will be a first-person exploration/thriller/horror game.
 - no shadows  
 - small number of object. ~4  
 - model the player in reflection  
+
+
+objects to model
+- baseball bat
+- vase
+- painting
+- fireplace 
+- window
+- mirror
+- chair
+- table
+- shelf
+- door
+- safe
+- key
+- torch
+- scroll
+- painting pieces 1-3
