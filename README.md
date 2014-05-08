@@ -57,7 +57,7 @@ This project will be a first-person exploration/thriller/horror game.
 - model the player in reflection  
 
 
-objects to model
+####objects to model
 - baseball bat
 - vase
 - painting
