@@ -196,9 +196,6 @@ void initTex(void) {
 	LoadTex(textures[6], "textures/fireplacetop.bmp");
 	LoadTex(textures[7], "textures/fireplaceleg.bmp");
 	LoadTex(textures[8], "textures/wood2.bmp");
-
-
-
 } //end initTex
 
 
@@ -344,6 +341,18 @@ void texRect(void) {
 	glDisable(GL_TEXTURE_2D);
 } //end flatTex
 
+
+//creates a flat, textured rectangle
+void texRect2(float width, float height) {
+	glEnable(GL_TEXTURE_2D);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0); glVertex3f(-width, -height, 0.0);
+		glTexCoord2f(0.0, height); glVertex3f(-width, height, 0.0);
+		glTexCoord2f(width, height); glVertex3f(width, height, 0.0);
+		glTexCoord2f(width, 0.0); glVertex3f(width, -height, 0.0);
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
+} //end flatTex
 
 //creates a flat, textured rectangle
 void texRectTiled(float width, float height) {
@@ -609,6 +618,75 @@ void key(void) {
 } //end key
 
 
+void safe(void) {
+
+    
+	//room 2 safe front
+
+	glPushMatrix();
+
+glTranslatef(20,2,9);
+
+    glScalef(2, 2, 2);
+
+glBindTexture(GL_TEXTURE_2D, textures[2]);
+
+texRect();
+
+glPopMatrix();
+
+    
+
+    //room 2 safe left side
+
+    glPushMatrix();
+
+glTranslatef(22,2,11);
+
+    glRotatef(90, 0, 1, 0);
+
+glBindTexture(GL_TEXTURE_2D, textures[0]);
+
+texRect2(2,2);
+
+glPopMatrix();
+
+    
+
+    //room 2 safe left side
+
+    glPushMatrix();
+
+glTranslatef(18,2,11);
+
+    glRotatef(90, 0, 1, 0);
+
+glBindTexture(GL_TEXTURE_2D, textures[0]);
+
+texRect2(2,2);
+
+glPopMatrix();
+
+    
+
+    //room 2 safe right side
+
+    glPushMatrix();
+
+glTranslatef(20,4,11);
+
+    glRotatef(90, 1, 0, 0);
+
+glBindTexture(GL_TEXTURE_2D, textures[0]);
+
+texRect2(2,2);
+
+glPopMatrix();
+
+}
+
+
+
 void fireplace(void) {
 	glEnable(GL_TEXTURE_2D);
 
@@ -808,8 +886,10 @@ void display(void) {
 
 
 
-
-
+	glPushMatrix();
+	glTranslatef(-10,0,0);
+	safe();
+	glPopMatrix();
 
 
 
@@ -1210,7 +1290,7 @@ int main(int argc, char **argv) {
  	glClearColor(0,0,0,0);
 
  	glShadeModel (GL_SMOOTH);	//smooth shading
- 	//light0();					//define the three lights
+ 	light0();					//define the three lights
    	//glEnable(GL_LIGHT0);		//enble all three lights
    	glEnable(GL_LIGHT1);
    	glEnable(GL_LIGHTING);		//enable lighting
@@ -1225,7 +1305,7 @@ int main(int argc, char **argv) {
  	initQObj();					//create a quadric object for glu shapes
  	srand(time(NULL));
  	//enableFog(0.5,0.5,0.5,0.05);  //fog
- 	enableFog(0.5,0.3,0.1,0.05); //warm
+ 	//enableFog(0.5,0.3,0.1,0.05); //warm
 
 
 
