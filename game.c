@@ -32,6 +32,7 @@
 #define movementSpeed 0.08 	//player movement speed
 #define numTextures 21
 
+#define numObjs 2
 #define KEY 0
 #define MACE 1
 
@@ -50,8 +51,16 @@ float lightPos[3][3] = { 	{-2.0,  3.5, -6.0},	    //position for each light
 							{-12.5, 1.2, -0.5},
 							{ 0.2,  1.0, -5.0}   };
 
-float objPos[2][4] = {	{0.0,0.0,0.0,  90.0},		//key
-						{0.0,0.0,0.0,  90.0}};		//mace
+//                                X   Y   Z   angle  radius
+float objPos[numObjs][5] = {	{0.0,0.0,0.0,  90.0,  1.0 },		//key
+						        {0.0,0.0,0.0,  90.0,  3.0 }};		//mace
+
+int door1Open = 0;
+int door2Open = 0;
+
+float focusx =0;
+float focusy =0;
+float focusz =0;
 
 
 float xpos = -17, ypos=0, zpos = 0;				//camera position
@@ -713,8 +722,7 @@ void torch(void){
 		glutSolidSphere(0.125,10,10);
 		glPopMatrix();
 	glPopMatrix();
-}
-//end torch
+} //end torch
 
 //mace
 void mace(void){
@@ -1651,11 +1659,24 @@ void chair(void){
 	//glDisable(GL_TEXTURE_2D);
 } //end chair
 
+//door
+void door(void) {
+	//1
+	glPushMatrix();
+	//glTranslatef(0,2.5,0.6);
+	//glRotatef(90,0,1,0);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+		glTexCoord2f(0.0, 1.0);   glVertex3f(0.0,2.0,0.0);
+		glTexCoord2f(1.0, 1.0);   glVertex3f(2.0,2.0,0.0);
+		glTexCoord2f(1.0, 0.0);   glVertex3f(2.0,0.0,0.0);
+		glEnd();
+	glPopMatrix();
+}
 
 
 
-
-
+//human statue thing...
 void humanScale(void) {
 	//human scale reference
 	glPushMatrix();
@@ -1673,7 +1694,7 @@ void humanScale(void) {
 		glPopMatrix();
 		glEnable(GL_LIGHTING);
 	glPopMatrix();
-}
+} //end human scale
 
 
 
@@ -1835,6 +1856,9 @@ void display(void) {
 	glPopMatrix();
 
 
+	//door1
+	door();
+
 
 	//room 1
 	{
@@ -1888,6 +1912,7 @@ void display(void) {
 			glPopMatrix();
 		glPopMatrix();
 
+		//room1 wall2, over door
 		glPushMatrix();
 			glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
 			glTranslatef(13,7,2);
@@ -1932,6 +1957,37 @@ void display(void) {
 		glPopMatrix();
 	}
 
+	// //hallway
+	// glPushMatrix();
+	// 	glTranslatef(14.5,1,23);
+	// 	//glRotatef(180,0,1,0);
+	// 	glBindTexture(GL_TEXTURE_2D, textures[5]); //wallpaper
+	// 	tiledTexWall(3,1);
+	// 	glPushMatrix();
+	// 		glBindTexture(GL_TEXTURE_2D, textures[3]); //wood panels
+	// 		glTranslatef(0,2,0);
+	// 		tiledTexWall(3,4);
+	// 	glPopMatrix();
+	// glPopMatrix();
+
+	// glPushMatrix();
+	// 	glTranslatef(13.5,1,4);
+	// 	glRotatef(-90,0,1,0);
+	// 	glBindTexture(GL_TEXTURE_2D, textures[5]); //wallpaper
+	// 	tiledTexWall(10,1);
+	// 	glPushMatrix();
+	// 		glBindTexture(GL_TEXTURE_2D, textures[3]); //wood panels
+	// 		glTranslatef(0,2,0);
+	// 		tiledTexWall(10,4);
+	// 	glPopMatrix();
+	// glPopMatrix();
+
+	// glPushMatrix();
+	// 	glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+	// 	glTranslatef(13.5,7,-2);
+	// 	glRotatef(-90,0,1,0);
+	// 	tiledTexWall(3,2);
+	// glPopMatrix();
 
 
 
@@ -2016,6 +2072,31 @@ void display(void) {
 
 
 	glDisable(GL_LIGHTING);
+
+
+	/*//selection sphere ===========================
+	float newxrot = xrot + xrotChange;
+	float newyrot = yrot + yrotChange;
+
+
+	float xrotrad, yrotrad;
+    yrotrad = (newyrot / 180 * PI);
+    xrotrad = (newxrot / 180 * PI * 2);
+
+    float sxpos = -(float)(sin(yrotrad)) * 2.0  - xpos;// * movementSpeed;
+    float szpos = (float)(cos(yrotrad)) * 2.0  - zpos;// * movementSpeed;
+    float sypos = -xrotrad;
+
+
+
+	glPushMatrix();
+	glTranslatef(sxpos, sypos+3, szpos);
+	glutWireSphere(1,10,10);
+	glPopMatrix();
+	//*///============================================
+
+
+	//fire animation
 	glEnable(GL_TEXTURE_2D);
 	glPushMatrix();
 	glTranslatef(-12.85,0,2);
@@ -2023,6 +2104,7 @@ void display(void) {
 	fire();
 	glPopMatrix();
 	glDisable(GL_TEXTURE_2D);
+
 
 	menu();
 
@@ -2037,9 +2119,30 @@ void display(void) {
 // Handles the begining and end of a left mouse click for view rotation.
 // The temporaty view rotation is applied when mouse click ends
 void mouse(int butt, int state, int x,  int y) {
+	for (int i=0; i<numObjs; i++) {
 
+
+	}
 } //end mouse
 
+
+// Handles the begining and end of a left mouse click for view rotation.
+// The temporaty view rotation is applied when mouse click ends
+void oldMouse(int butt, int state, int x,  int y) {
+	if (state == GLUT_DOWN  &&  butt == GLUT_LEFT_BUTTON) {	//left click
+		if(mousePressed == 0) {		//if this is the innitial click down,
+			mouseStartX = x;		//save starting mouse x coordinate
+			mouseStartY = y;		//save starting mouse y coordinate
+		}
+		mousePressed = 1;			//set mouse pressed state to true
+	}
+	else {							//else the left click is no longer pressed
+		mousePressed = 0;			//set pressed state to false
+		xrot += xrotChange;			//apply the x rotation change to make it permanent
+		yrot += yrotChange;			//apply the y rotation change to make it permanent
+		xrotChange = yrotChange = 0;//reset temporary rotation change to 0
+	}
+} //end mouse
 
 // Changes the temporary view rotation while the left mouse button is pressed.
 // The temporary rotation angle is proportional to the distance of the mouse
@@ -2049,11 +2152,11 @@ void motion(int x, int y) {
 	yrotChange = (float)(x - screenCenterX)/3.0;	//set the temp y-axis rot to the mouse x distance
 
 	//limit the x-axis rotation to prevent the camera from being able to flip upside-down
-	if(xrot+xrotChange > 90.0) {	//if camera tries to flip over from above
-		xrotChange = 90.0 - xrot;
+	if(xrot+xrotChange > 70.0) {	//if camera tries to flip over from above
+		xrotChange = 70.0 - xrot;
 	}
-	if(xrot+xrotChange < -90.0) {	//if camera tries to flip over from below
-		xrotChange = -90 - xrot;
+	if(xrot+xrotChange < -70.0) {	//if camera tries to flip over from below
+		xrotChange = -70 - xrot;
 	}
 } //end motion
 
@@ -2123,75 +2226,85 @@ void specialKey(int key, int x, int y) {
 
 //applies movements and rotation changes and redraws the world at set intervals
 void timer(int value) {
-	//rotation angles = permanent rotation + temporary rotation
-	float newxrot = xrot + xrotChange;
-	float newyrot = yrot + yrotChange;
 
-	//viewer position change using the w a s d keys. Moves relative to the viewing angle.
-	if (a_state) {								//a key is pressed (strafe left)
-		float yrotrad;
-		yrotrad = (newyrot / 180 * PI);
-		xpos -= (float)(cos(yrotrad)) * movementSpeed;
-		zpos -= (float)(sin(yrotrad)) * movementSpeed;
-	}
-	if (d_state) {								//d key is pressed (strafe right)
-		float yrotrad;
-		yrotrad = (newyrot / 180 * PI);
-		xpos += (float)cos(yrotrad) * movementSpeed;
-		zpos += (float)sin(yrotrad) * movementSpeed;
-	}
-	if (w_state) {								//w key is pressed (move forward)
-		float xrotrad, yrotrad;
-        yrotrad = (newyrot / 180 * PI);
-        xrotrad = (newxrot / 180 * PI);
-        xpos += (float)(sin(yrotrad)) * movementSpeed;
-        zpos -= (float)(cos(yrotrad)) * movementSpeed;
-	}
-	if (s_state) {								//s key is pressed (move backwards)
-		float xrotrad, yrotrad;
-        yrotrad = (newyrot / 180 * PI);
-        xrotrad = (newxrot / 180 * PI);
-        xpos -= (float)(sin(yrotrad)) * movementSpeed;
-        zpos += (float)(cos(yrotrad)) * movementSpeed;
-	}
+	//movement when keys are pressed. freezes if the menu is open
+	if (!helpMenu) {
+		//rotation angles = permanent rotation + temporary rotation
+		float newxrot = xrot + xrotChange;
+		float newyrot = yrot + yrotChange;
 
-	//view rotation using the e and q keys
-	if (q_state && !mousePressed) {				//q key is pressed (rotate left)
-		yrot -= 1;
-        if (yrot < -360)yrot += 360;
-	}
-	if (e_state && !mousePressed) {				//e key is pressed (rotate right)
-		yrot += 1;
-        if (yrot >360) yrot -= 360;
-	}
-
-	if (jumpRising){				//if jumping up,
-		ypos += jumpSpeed;				//move higher
-		jumpSpeed *= 0.9;				//decrease jump speed
-		if(jumpSpeed < 0.1) {			//when jump speed slows,
-			jumpRising = 0;					//no longer rising
-			jumpSpeed *= -1;				//reverse speed
+		//viewer position change using the w a s d keys. Moves relative to the viewing angle.
+		if (a_state) {								//a key is pressed (strafe left)
+			float yrotrad;
+			yrotrad = (newyrot / 180 * PI);
+			xpos -= (float)(cos(yrotrad)) * movementSpeed;
+			zpos -= (float)(sin(yrotrad)) * movementSpeed;
 		}
-	}
-	else {							//not jumping up,
-		if (ypos > 0.0){				//until we reach the ground,
-			ypos += jumpSpeed;				//move lower
-			jumpSpeed /= 0.9;				//increase falling speed
-			if(ypos < 0.0) {				//if we reach the ground
-				ypos = 0;						//land at 0
+		if (d_state) {								//d key is pressed (strafe right)
+			float yrotrad;
+			yrotrad = (newyrot / 180 * PI);
+			xpos += (float)cos(yrotrad) * movementSpeed;
+			zpos += (float)sin(yrotrad) * movementSpeed;
+		}
+		if (w_state) {								//w key is pressed (move forward)
+			//float xrotrad;
+			float yrotrad;
+	        yrotrad = (newyrot / 180 * PI);
+	        //xrotrad = (newxrot / 180 * PI);
+	        xpos += (float)(sin(yrotrad)) * movementSpeed;
+	        zpos -= (float)(cos(yrotrad)) * movementSpeed;
+		}
+		if (s_state) {								//s key is pressed (move backwards)
+			//float xrotrad;
+			float yrotrad;
+	        yrotrad = (newyrot / 180 * PI);
+	        //xrotrad = (newxrot / 180 * PI);
+	        xpos -= (float)(sin(yrotrad)) * movementSpeed;
+	        zpos += (float)(cos(yrotrad)) * movementSpeed;
+		}
+
+		//view rotation using the e and q keys
+		if (q_state && !mousePressed) {				//q key is pressed (rotate left)
+			yrot -= 1;
+	        if (yrot < -360)yrot += 360;
+		}
+		if (e_state && !mousePressed) {				//e key is pressed (rotate right)
+			yrot += 1;
+	        if (yrot >360) yrot -= 360;
+		}
+
+		if (jumpRising){				//if jumping up,
+			ypos += jumpSpeed;				//move higher
+			jumpSpeed *= 0.9;				//decrease jump speed
+			if(jumpSpeed < 0.1) {			//when jump speed slows,
+				jumpRising = 0;					//no longer rising
+				jumpSpeed *= -1;				//reverse speed
 			}
 		}
-	}
+		else {							//not jumping up,
+			if (ypos > 0.0){				//until we reach the ground,
+				ypos += jumpSpeed;				//move lower
+				jumpSpeed /= 0.9;				//increase falling speed
+				if(ypos < 0.0) {				//if we reach the ground
+					ypos = 0;						//land at 0
+				}
+			}
+		}
 
 
-	//trap the cursor in the center of the window unless the menu is open
-	if(!helpMenu) {
-		xrot += xrotChange;
-		yrot += yrotChange;
-		xrotChange = 0;
-		yrotChange = 0;
-		glutWarpPointer(screenCenterX, screenCenterY);
-	}
+
+		//MONICA comment htis stuff
+		// trap the cursor in the center of the window unless the menu is open
+		// this allows the user to move the mouse to change the viewing angle
+		// without running off the sides of the window.
+		// xrot += xrotChange;
+		// yrot += yrotChange;
+		// xrotChange = 0;
+		// yrotChange = 0;
+		//glutWarpPointer(screenCenterX, screenCenterY);
+	} //end if helpmenu
+
+
 
 	glutPostRedisplay();						//redraw scene
 	glutTimerFunc(waitTime, timer, 1);			//set next timer
@@ -2259,15 +2372,18 @@ int main(int argc, char **argv) {
  	glShadeModel (GL_SMOOTH);	//smooth shading
  	light0();					//define the three lights
    	glEnable(GL_LIGHT0);		//enble all three lights
-   	glEnable(GL_LIGHT1);
+   	//glEnable(GL_LIGHT1);
    	glEnable(GL_LIGHTING);		//enable lighting
    	//repositions specular reflections for view change
 	glLightModelf(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
 
 
  	glutFullScreen();
-   	glutSetCursor(GLUT_CURSOR_NONE);
-   	//glutWarpPointer(screenCenterX, screenCenterY);
+
+   	//glutSetCursor(GLUT_CURSOR_NONE);   //MONICA comment this line
+
+
+   	//glutWarpPointer(screenCenterX, screenCenterY);   //MONICA comment this line
    	float xrot=0, yrot=90;
  	glutIgnoreKeyRepeat(1);		// disables glut from simulating key press and
  								// release repetitions when holding down a key
@@ -2282,9 +2398,12 @@ int main(int argc, char **argv) {
  	//event callbacks
  	glutDisplayFunc(display);			//display
  	glutReshapeFunc(reshape);			//reshape window
- 	glutMouseFunc(mouse);				//mouse button clicks
+ 	//glutMouseFunc(mouse);				//mouse button clicks   MONICA comment this
+
+ 	glutMouseFunc(oldMouse);  //MONICA un-comment this
+
  	glutMotionFunc(motion);				//mouse click movement
- 	glutPassiveMotionFunc(motion);
+ 	//glutPassiveMotionFunc(motion);   //MONICA  comment this line
  	glutKeyboardFunc(keyboard);			//key presses
  	glutKeyboardUpFunc(keyboardUp);		//key release
  	glutSpecialFunc(specialKey);
