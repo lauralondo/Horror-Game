@@ -30,7 +30,7 @@
 #define groundSize 20 		//size of the ground grid
 #define waitTime 16 		//millisecond wait between redisplays
 #define movementSpeed 0.25 	//player movement speed
-#define numTextures 22
+#define numTextures 24
 
 #define numObjs 2
 #define KEY 0
@@ -53,16 +53,16 @@ float lightPos[3][3] = { 	{-2.0,  3.5, -6.0},	    //position for each light
 
 float selectPos[3]={0,0,0};
 float selRangeRadius = 3.0;
-float selSphereRadius = 0.2;
+float selSphereRadius = 0.8;
 
                                // X   Y   Z   angle  radius
 float objPos[numObjs][5] = {	{8.0,0.0,0.0,  90.0,  0.7 },	//KEY
-						        {10.5,2.3,9,  90.0,  1.5 }};	//MACE
+						        {10.5,2.3,9,  90.0,  1 }};	//MACE
 //int selected[numObjs] = {0,0};
 int selected = -1;
 int collision = 0;
 
-int door1Open = 0;
+int officeDoorOpen = 0;
 int door2Open = 0;
 
 float focusx =0;
@@ -241,6 +241,8 @@ void initTex(void) {
 	LoadTex(textures[19], "textures/fire9.bmp");
 	LoadTex(textures[20], "textures/fire10.bmp");
 	LoadTex(textures[21], "textures/door1.bmp");
+	LoadTex(textures[22], "textures/castIron.bmp");
+	LoadTex(textures[23], "textures/metalGrip.bmp");
 } //end initTex
 
 //define the current drawing material
@@ -562,6 +564,24 @@ void texCircle(int segments) {
 
 
 
+int inOffice(void) {
+	if(xpos > -13.2) return 1;
+	else return 0;
+}
+
+int inHallway(void) {
+	if(xpos < -13.2  &&  xpos > -33) return 1;
+	else return 0;
+}
+
+int inTortureRoom(void) {
+	if(xpos < -33) return 1;
+	else return 0;
+}
+
+
+
+
 
 //Models the ground. consists of a flat gorund color and a grid
 void grid(void) {
@@ -585,7 +605,7 @@ void grid(void) {
 
 //key object
 void key(void) {
-	int stackNslice = 20; //number of stacks and slices for all shapes
+	int stackNslice = 40; //number of stacks and slices for all shapes
 
 	//define key material
 	float mat_specular[]={0.9, 0.9, 0.5, 1.0};
@@ -599,6 +619,7 @@ void key(void) {
 
     glEnable(GL_NORMALIZE); //rescales normals
     glPushMatrix();
+    glTranslatef(0,-0.25,0);
     glScalef(0.01,0.01,0.01);
 		//ringed handle
 		glPushMatrix();
@@ -772,46 +793,95 @@ void torch(void){
 
 //macefile:///C:/Users/Laura/Downloads/game.c
 void mace(void){
-	double NSEGMENTS = 10;
-    glPushMatrix();
-    //glTranslatef(0.0,2.0,0.0);
-    glRotatef(-90,1,0,0);
-    gluCylinder(qobj, 0.05, 0.05, 2, NSEGMENTS, NSEGMENTS);
-    glPopMatrix();
 
 
-    glPushMatrix();
-    glTranslatef(0.0,2.0,0.0);
-    glutSolidSphere(0.2,100,100);
+	gluQuadricTexture(qobj, GL_TRUE);
+	glEnable(GL_TEXTURE_2D);
+
+	glPushMatrix();
+    glTranslatef(0.0,-1.2,0.0);
+
+		//handle
+	    glPushMatrix();
+	 	   glRotatef(-90,1,0,0);
+
+		    //upper handle
+			glBindTexture(GL_TEXTURE_2D, textures[22]);
+		    glPushMatrix();
+			    glTranslatef(0,0,1.2);
+			    gluCylinder(qobj, 0.05, 0.05, 0.6, 20, 20);
+		    glPopMatrix();
+		    glPushMatrix();
+			    glTranslatef(0,0,0.6);
+			    gluCylinder(qobj, 0.05, 0.05, 0.6, 20, 20);
+		    glPopMatrix();
+		    //lower handle (grip)
+		    glBindTexture(GL_TEXTURE_2D, textures[23]);
+		    gluCylinder(qobj, 0.06,  0.06,  0.8, 20, 20);
+		    //handle rings
+		    glPushMatrix();
+		    	glTranslatef(0,0,0.8);
+		    	glutSolidTorus(0.025,0.05,10,10);
+		    glPopMatrix();
+		    glPushMatrix();
+		    	glTranslatef(0,0,1.8);
+		    	glutSolidTorus(0.025,0.05,20,20);
+		    glPopMatrix();
+		    glutSolidTorus(0.025,0.05,10,10);
+		    glutSolidSphere(0.05, 10,10);
+	    glPopMatrix();
+
+	    //head
+	    glBindTexture(GL_TEXTURE_2D, textures[22]);
+	    glPushMatrix();
+	    glTranslatef(0.0,2.0,0.0);
+	    gluSphere(qobj,0.205,60,60);
+	    glPopMatrix();
+
+	    gluQuadricTexture(qobj, GL_FALSE);
+		glDisable(GL_TEXTURE_2D);
+
+		//define material
+		float mat_specular[]={0.4, 0.4, 0.2, 1.0};
+		float mat_diffuse[] ={0.3, 0.2, 0.1, 1.0};
+		float mat_ambient[] ={0.02, 0.0, 0.0, 1.0};
+		float mat_shininess={90};
+		glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+	    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+	    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+	    glMaterialf(GL_FRONT, GL_SHININESS, mat_shininess);
+
+
+	    //Spike1
+	    glPushMatrix();
+	    glTranslatef(0.0,2.0,0.2);
+	    //glRotatef();
+	    glutSolidCone(0.05,0.1,10,10);
+	    glPopMatrix();
+
+	    //Spike2
+	    glPushMatrix();
+	    glTranslatef(0.0,2.0,-0.2);
+	    glRotatef(180,0,1,0);
+	    glutSolidCone(0.05,0.1,10,10);
+	    glPopMatrix();
+
+	    //Spike3
+	    glPushMatrix();
+	    glTranslatef(0.2,2.0,0.0);
+	    glRotatef(90,0,1,0);
+	    glutSolidCone(0.05,0.1,10,10);
+	    glPopMatrix();
+
+	    //Spike4
+	    glPushMatrix();
+	    glTranslatef(-0.2,2.0,0.0);
+	    glRotatef(-90,0,1,0);
+	    glutSolidCone(0.05,0.1,10,10);
+	    glPopMatrix();
     glPopMatrix();
 
-    //Spike1
-    glPushMatrix();
-    glTranslatef(0.0,2.0,0.2);
-    //glRotatef();
-    glutSolidCone(0.05,0.1,10,10);
-    glPopMatrix();
-
-    //Spike2
-    glPushMatrix();
-    glTranslatef(0.0,2.0,-0.2);
-    glRotatef(180,0,1,0);
-    glutSolidCone(0.05,0.1,10,10);
-    glPopMatrix();
-
-    //Spike3
-    glPushMatrix();
-    glTranslatef(0.2,2.0,0.0);
-    glRotatef(90,0,1,0);
-    glutSolidCone(0.05,0.1,10,10);
-    glPopMatrix();
-
-    //Spike4
-    glPushMatrix();
-    glTranslatef(-0.2,2.0,0.0);
-    glRotatef(-90,0,1,0);
-    glutSolidCone(0.05,0.1,10,10);
-    glPopMatrix();
+    glDisable(GL_TEXTURE_2D);
 } //end mace
 
 //vase
@@ -2232,50 +2302,46 @@ void portrait(void){
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  	glLoadIdentity();
+
+ 	glDisable(GL_TEXTURE_2D);
+ 	glEnable(GL_LIGHTING);
+
+ 	if(inOffice()  ||  officeDoorOpen) {
+ 		glEnable(GL_LIGHT1);
+ 	}
+ 	else {
+ 		glDisable(GL_LIGHT1);
+ 	}
+
+
+ 	if(selected == KEY) {
+		glPushMatrix();
+		glTranslatef(0.8,-0.2,-1);
+		key();
+		glPopMatrix();
+	}
+	else if(selected == MACE) {
+		glPushMatrix();
+		glTranslatef(1.0,0,-1.5);
+		glRotatef(-20,1,0,0);
+		mace();
+		glPopMatrix();
+	}
+
  	glDisable(GL_LIGHTING);
+
  	//view changes
  	glRotatef(xrot+xrotChange, 1,0,0);	//viewer x rotation
  	glRotatef(yrot+yrotChange, 0,1,0);	//viewer y rotation
  	glTranslatef(-xpos,-ypos,-zpos);	//viewer position
 	gluLookAt(0,3,0,  0,3,5,  0,1,0);	//camera
 
-	//grid();							//draw ground
 
 	light0(); // large light
-		//draw sphere for light 0
-		// glColor3f(1,1,0.7);
-		// glPushMatrix();
-		// glTranslatef(lightPos[0][0], lightPos[0][1], lightPos[0][2]);
-		// glutSolidSphere(0.05,10,30);
-	// glPopMatrix();
-
-	light1(); //fireplace
-		//draw shphere for light 1 (fireplace)
-		// glColor3f(1,0.7,0.3);
-		// glPushMatrix();
-		// glTranslatef(lightPos[1][0]+fireJitter,
-		// 		 	 lightPos[1][1]+fireJitter,
-		// 			 lightPos[1][2]+fireJitter);
-		// glutSolidSphere(0.05,10,30);
-	// glPopMatrix();
-
-
+	light1(); // fireplace
 
 
 	glEnable(GL_LIGHTING);
-
-
-	// GLfloat dim_light[] = {0.0f, 0.0f, 0.0f, 1.0f};
-		// glLightModelfv(GL_LIGHT_MODEL_AMBIENT, dim_light);
-		// //repositions specular reflections for view change
-		// glLightModelf(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
-		// glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
-	//glEnable(GL_POLYGON_SMOOTH);
-
-
-
-
-
 	// objects /////////////////////////////////////////////////////////////////
 
 
@@ -2285,7 +2351,7 @@ void display(void) {
 	//statue
 	humanScale();
 
-	//chandel
+	//chandelier
 	{
 		glPushMatrix();
 		glTranslatef(43,10,0);
@@ -2306,28 +2372,31 @@ void display(void) {
 		glPopMatrix();
 	}
 
-
 	//key
-	glPushMatrix();
-	glTranslatef(objPos[KEY][0], objPos[KEY][1], objPos[KEY][2]);
-	glRotatef(objPos[KEY][3], 1,0,0);
-	glutWireSphere(objPos[KEY][4],10,10);
-	key();
-	glPopMatrix();
+	if(selected != KEY) {
+		glPushMatrix();
+		glTranslatef(objPos[KEY][0], objPos[KEY][1], objPos[KEY][2]);
+		glRotatef(objPos[KEY][3], 1,0,0);
+		//glutWireSphere(objPos[KEY][4],10,10);
+		key();
+		glPopMatrix();
+	}
 
 	//mace
-	glPushMatrix();
-	glTranslatef(objPos[MACE][0], objPos[MACE][1], objPos[MACE][2]);
-	glRotatef(objPos[MACE][3], 1,0,0);
-	mace();
-	glutWireSphere(objPos[MACE][4],10,10);
-	glPopMatrix();
+	if(selected != MACE) {
+		glPushMatrix();
+		glTranslatef(objPos[MACE][0], objPos[MACE][1], objPos[MACE][2]);
+		glRotatef(objPos[MACE][3], 1,0,0);
+		mace();
+		//glutWireSphere(objPos[MACE][4],10,10);
+		glPopMatrix();
+	}
 
 	//vase
-	glPushMatrix();
-	glTranslatef(43,0.8,-8);
-	vase();
-	glPopMatrix();
+		glPushMatrix();
+		glTranslatef(43,0.8,-8);
+		vase();
+		glPopMatrix();
 
 
 
@@ -2336,7 +2405,7 @@ void display(void) {
 
 	// textured objects ////////////////////////////////////////////////////////
 	// allows texture lighting
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 	//safe
 	glPushMatrix();
@@ -2344,51 +2413,53 @@ void display(void) {
 	//safe();
 	glPopMatrix();
 
+
+
 	//fireplace
-	glPushMatrix();
-	glTranslatef(-12.4,0,-2.5);
-	glRotatef(-90,0,1,0);
-	fireplace();
-	glPopMatrix();
+		glPushMatrix();
+		glTranslatef(-12.4,0,-2.5);
+		glRotatef(-90,0,1,0);
+		fireplace();
+		glPopMatrix();
+
+	//office room door
+		//door 1 right
+		glPushMatrix();
+		glTranslatef(13,0,3);
+		door(1);
+		glPopMatrix();
+		//door1 left
+		glPushMatrix();
+		glTranslatef(13,0,0);
+		door(0);
+		glPopMatrix();
+		//door frame
+		glPushMatrix();
+		glTranslatef(12.96,0,-3);
+		doorFrame();
+		glPopMatrix();
 
 
 
 
 
-	//office room
-	//door 1 right
-	glPushMatrix();
-	glTranslatef(13,0,3);
-	door(1);
-	glPopMatrix();
-	//door1 left
-	glPushMatrix();
-	glTranslatef(13,0,0);
-	door(0);
-	glPopMatrix();
-	//door frame 1
-	glPushMatrix();
-	glTranslatef(12.96,0,-3);
-	doorFrame();
-	glPopMatrix();
 
-
-	//torture room
-	//door2 right
-	glPushMatrix();
-	glTranslatef(32.8,0,3);
-	door(1);
-	glPopMatrix();
-	//door1 left
-	glPushMatrix();
-	glTranslatef(32.8,0,0);
-	door(0);
-	glPopMatrix();
-	//door frame 1
-	glPushMatrix();
-	glTranslatef(32.76,0,-3);
-	doorFrame();
-	glPopMatrix();
+	//torture room door
+		//door right
+		glPushMatrix();
+		glTranslatef(32.88,0,3);
+		door(1);
+		glPopMatrix();
+		//door left
+		glPushMatrix();
+		glTranslatef(32.88,0,0);
+		door(0);
+		glPopMatrix();
+		//door frame
+		glPushMatrix();
+		glTranslatef(32.83,0,-3);
+		doorFrame();
+		glPopMatrix();
 
 
 	//bookshelf
@@ -2511,7 +2582,6 @@ void display(void) {
 
 
 	//room 1
-	{
 		glBindTexture(GL_TEXTURE_2D, textures[0]); //wood planks
 		material(1,0.8,0.5,5);                     //material properties
 		//room 1 floor
@@ -2605,7 +2675,6 @@ void display(void) {
 			glRotatef(-90,1,0,0);
 			tiledTexWall(13,13);
 		glPopMatrix();
-	}
 
 
 	//Hallway
@@ -2642,6 +2711,7 @@ void display(void) {
 				tiledTexWall(10,5);
 			glPopMatrix();
 
+		//torches
 		for(int i = 15; i >= 0; i-=5){
 			glPushMatrix();
 			glTranslatef(i+3,3,-9);
@@ -2699,7 +2769,7 @@ void display(void) {
 
 			//room1 wall 2, right side
 			glPushMatrix();
-				glTranslatef(13+19.75,1,10);
+				glTranslatef(32.9,1,10);
 				glRotatef(90,0,1,0);
 				glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
 				tiledTexWall(4,1);
@@ -2712,7 +2782,7 @@ void display(void) {
 
 			//room1 wall 2, left side
 			glPushMatrix();
-				glTranslatef(13+19.75,1,-4);
+				glTranslatef(32.9,1,-4);
 				glRotatef(90,0,1,0);
 				glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
 				tiledTexWall(4,1);
@@ -2725,205 +2795,129 @@ void display(void) {
 
 			glPushMatrix();
 				glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-				glTranslatef(13+19.75,7,2);
+				glTranslatef(32.9,7,2);
 				glRotatef(90,0,1,0);
 				tiledTexWall(3,2);
 			glPopMatrix();
 
 
 	//room 2
-	glPushMatrix();
-	glTranslatef(45.99,0,0);
-	{
-		glBindTexture(GL_TEXTURE_2D, textures[0]); //wood planks
-		material(1,0.8,0.5,5);                     //material properties
-		//room 2 floor
 		glPushMatrix();
-			glTranslatef(-12,0,-9);
-			glRotatef(90,1,0,0);
-			tiledTexWall(10,10);
-		glPopMatrix();
-
-		material(1,0.8,0.5,5);
-
-		//room1 wall 1
-		glPushMatrix();
-			glTranslatef(6,1,-10);
-			glRotatef(180,0,1,0);
-			glBindTexture(GL_TEXTURE_2D, textures[5]); //wallpaper
-			tiledTexWall(10,1);
-			glPushMatrix();
-				glBindTexture(GL_TEXTURE_2D, textures[3]); //wood panels
-				glTranslatef(0,2,0);
-				tiledTexWall(10,4);
-			glPopMatrix();
-		glPopMatrix();
-
-		//Far wall
-		glPushMatrix();
-			glTranslatef(7,1,9);
-			glRotatef(90,0,1,0);
-			glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
-			tiledTexWall(10,1);
-			glPushMatrix();
-				glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-				glTranslatef(0,2,0);
-				tiledTexWall(10,4);
-			glPopMatrix();
-		glPopMatrix();
-
-		//room1 wall 3
-		glPushMatrix();
-			glTranslatef(-12,1,10);
-			glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
-			tiledTexWall(10,1);
-			glPushMatrix();
-				glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-				glTranslatef(0,8,0);
-				tiledTexWall(10,1);
-			glPopMatrix();
-			glPushMatrix();
-				glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-				glTranslatef(0,0,0);
-				tiledTexWall(1,4);
-			glPopMatrix();
-			glPushMatrix();
-				glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-				glTranslatef(18,0,0);
-				tiledTexWall(1,4);
-			glPopMatrix();
-		glPopMatrix();
-
-		//room 2 ceiling
-		glBindTexture(GL_TEXTURE_2D, textures[4]);
-		glPushMatrix();
-			glTranslatef(-12,10,9);
-			glRotatef(-90,1,0,0);
-			tiledTexWall(10,10);
-		glPopMatrix();
-
-		//Connecting Wall
-			//room1 wall 2, right side
-			glPushMatrix();
-				glTranslatef(-12.93,1,4);
-				glRotatef(-90,0,1,0);
-				glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
-				tiledTexWall(4,1);
-				glPushMatrix();
-					glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-					glTranslatef(0,2,0);
-					tiledTexWall(4,4);
-				glPopMatrix();
-			glPopMatrix();
-
-			//room1 wall 2, left side
-			glPushMatrix();
-				glTranslatef(-12.93,1,-12);
-				glRotatef(-90,0,1,0);
-				glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
-				tiledTexWall(5,1);
-				glPushMatrix();
-					glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-					glTranslatef(0,2,0);
-					tiledTexWall(5,4);
-				glPopMatrix();
-			glPopMatrix();
-
-			glPushMatrix();
-				glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-				glTranslatef(-12.93,7,-2);
-				glRotatef(-90,0,1,0);
-				tiledTexWall(3,2);
-			glPopMatrix();
-
-	}
-	glPopMatrix();
-	//*/
-
-	/*//room 2
-		glPushMatrix();
-			glTranslatef(26.5,0,0);
+		glTranslatef(45.99,0,0);
 			glBindTexture(GL_TEXTURE_2D, textures[0]); //wood planks
 			material(1,0.8,0.5,5);                     //material properties
-			//room 1 floor
+			//room 2 floor
 			glPushMatrix();
-				glTranslatef(-12,0,-12);
+				glTranslatef(-12,0,-9);
 				glRotatef(90,1,0,0);
-				tiledTexWall(13,13);
+				tiledTexWall(10,10);
 			glPopMatrix();
 
 			material(1,0.8,0.5,5);
 
 			//room1 wall 1
 			glPushMatrix();
-				glTranslatef(12,1,-13);
+				glTranslatef(6,1,-10);
 				glRotatef(180,0,1,0);
 				glBindTexture(GL_TEXTURE_2D, textures[5]); //wallpaper
-				tiledTexWall(13,1);
+				tiledTexWall(10,1);
 				glPushMatrix();
 					glBindTexture(GL_TEXTURE_2D, textures[3]); //wood panels
 					glTranslatef(0,2,0);
-					tiledTexWall(13,7);
+					tiledTexWall(10,4);
 				glPopMatrix();
 			glPopMatrix();
 
-			//room1 wall 2
+			//Far wall
 			glPushMatrix();
-				glTranslatef(13,1,12);
+				glTranslatef(7,1,9);
 				glRotatef(90,0,1,0);
 				glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
-				tiledTexWall(13,1);
+				tiledTexWall(10,1);
 				glPushMatrix();
 					glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
 					glTranslatef(0,2,0);
-					tiledTexWall(13,7);
+					tiledTexWall(10,4);
 				glPopMatrix();
 			glPopMatrix();
 
 			//room1 wall 3
 			glPushMatrix();
-				glTranslatef(-12,1,13);
+				glTranslatef(-12,1,10);
 				glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
-				tiledTexWall(13,1);
+				tiledTexWall(10,1);
 				glPushMatrix();
 					glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-					glTranslatef(0,2,0);
-					tiledTexWall(13,7);
+					glTranslatef(0,8,0);
+					tiledTexWall(10,1);
+				glPopMatrix();
+				glPushMatrix();
+					glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+					glTranslatef(0,0,0);
+					tiledTexWall(1,4);
+				glPopMatrix();
+				glPushMatrix();
+					glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+					glTranslatef(18,0,0);
+					tiledTexWall(1,4);
 				glPopMatrix();
 			glPopMatrix();
 
-
-			//room1 wall 4
-			glPushMatrix();
-				glTranslatef(-13,1,-12);
-				glRotatef(-90,0,1,0);
-				glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
-				tiledTexWall(13,1);
-				glPushMatrix();
-					glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-					glTranslatef(0,2,0);
-					tiledTexWall(13,7);
-				glPopMatrix();
-			glPopMatrix();
-
-			//room 1 ceiling
+			//room 2 ceiling
 			glBindTexture(GL_TEXTURE_2D, textures[4]);
 			glPushMatrix();
-				glTranslatef(-12,10,12);
+				glTranslatef(-12,10,9);
 				glRotatef(-90,1,0,0);
-				tiledTexWall(13,13);
+				tiledTexWall(10,10);
 			glPopMatrix();
+
+			//Connecting Wall
+				//room1 wall 2, right side
+				glPushMatrix();
+					glTranslatef(-12.93,1,4);
+					glRotatef(-90,0,1,0);
+					glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
+					tiledTexWall(4,1);
+					glPushMatrix();
+						glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+						glTranslatef(0,2,0);
+						tiledTexWall(4,4);
+					glPopMatrix();
+				glPopMatrix();
+
+				//room1 wall 2, left side
+				glPushMatrix();
+					glTranslatef(-12.93,1,-12);
+					glRotatef(-90,0,1,0);
+					glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
+					tiledTexWall(5,1);
+					glPushMatrix();
+						glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+						glTranslatef(0,2,0);
+						tiledTexWall(5,4);
+					glPopMatrix();
+				glPopMatrix();
+
+				glPushMatrix();
+					glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+					glTranslatef(-12.93,7,-2);
+					glRotatef(-90,0,1,0);
+					tiledTexWall(3,2);
+				glPopMatrix();
 		glPopMatrix();
-	//*/
+
+
+
+
+
+
 
 
 
 	glDisable(GL_LIGHTING);
 	glDisable(GL_TEXTURE_2D);
 
-
-
-	//*//selection sphere ===========================
+	/*//selection sphere ===========================
 	float newxrot = xrot + xrotChange;
 	float newyrot = yrot + yrotChange;
 
@@ -2932,11 +2926,11 @@ void display(void) {
     xrotrad = ((newxrot+90.0) / 180 * PI);
 
     selectPos[0] = (sin(xrotrad)) * (cos(yrotrad)) * selRangeRadius - xpos ;
-    selectPos[1] = (cos(xrotrad)) * selRangeRadius + ypos;
+    selectPos[1] = (cos(xrotrad)) * selRangeRadius + ypos+3;
    	selectPos[2] = (sin(xrotrad)) * (sin(yrotrad)) * selRangeRadius -zpos ;
 
 
-    glColor3f(1,1,1);
+
 	glPushMatrix();
 	glTranslatef(selectPos[0], selectPos[1], selectPos[2]);
 	//glRotatef(-yrot,0,1,0);
@@ -2946,9 +2940,11 @@ void display(void) {
 		glColor3f(1,0,1);
 	else
 		glColor3f(1,1,1);
+
 	glutWireSphere(selSphereRadius,10,10);
 	glPopMatrix();
 	//*///============================================
+
 
 
 	//fire animation
@@ -2971,47 +2967,51 @@ void display(void) {
 
 
 
-// Handles the begining and end of a left mouse click for view rotation.
-// The temporaty view rotation is applied when mouse click ends
+// interacts with items around the environment
 void mouse(int butt, int state, int x,  int y) {
 
+	if (state == GLUT_DOWN  &&  butt == GLUT_LEFT_BUTTON) {	//left click
+		float newxrot = xrot + xrotChange;
+		float newyrot = yrot + yrotChange;
 
-	float newxrot = xrot + xrotChange;
-	float newyrot = yrot + yrotChange;
+		float xrotrad, yrotrad;
+	    yrotrad = ((newyrot+90.0) / 180 * PI);
+	    xrotrad = ((newxrot+90.0) / 180 * PI);
 
-	float xrotrad, yrotrad;
-    yrotrad = ((newyrot+90.0) / 180 * PI);
-    xrotrad = ((newxrot+90.0) / 180 * PI);
+	    selectPos[0] = (sin(xrotrad)) * (cos(yrotrad)) * selRangeRadius - xpos ;
+	    selectPos[1] = (cos(xrotrad)) * selRangeRadius + ypos+3;
+	    selectPos[2] = (sin(xrotrad)) * (sin(yrotrad)) * selRangeRadius -zpos ;
 
-    selectPos[0] = (sin(xrotrad)) * (cos(yrotrad)) * selRangeRadius - xpos ;
-    selectPos[1] = (cos(xrotrad)) * selRangeRadius + ypos;
-    selectPos[2] = (sin(xrotrad)) * (sin(yrotrad)) * selRangeRadius -zpos ;
-
-
-	//check collision with all interactable objbects
-	for (int i=0; i<numObjs; i++) {
-		float x2 = pow(selectPos[0] - objPos[i][0], 2);
-		float y2 = pow(selectPos[1] - objPos[i][1], 2);
-		float z2 = pow(selectPos[2] - objPos[i][2], 2);
-		float dist = sqrt(x2 + y2 + z2);
-
-		if(dist < selSphereRadius+objPos[i][4]) {
-			collision = 1;
-			if(selected == i) {
-				objPos[i][3] = 90;
-				objPos[i][1] = 0;
-				selected = -1;
-			}
-			else {
-				objPos[i][3] = 0;
-				objPos[i][1] = 2;
-				selected = 1;
-			}
+	    //if we are holding something, put it down
+		if(selected != -1) {
+			objPos[selected][3] = 90;
+			objPos[selected][0] = selectPos[0];
+			objPos[selected][1] = 0;
+			objPos[selected][2] = selectPos[2];
+			selected = -1;
 		}
+		//else, check collision with all interactable objects
 		else {
-			collision = 0;
-		}
-	}
+			int closest = -1; //closest item so far
+			float closestDist = 999;
+			for (int i=0; i<numObjs; i++) {
+				float x2 = pow(selectPos[0] - objPos[i][0], 2);
+				float y2 = pow(selectPos[1] - objPos[i][1], 2);
+				float z2 = pow(selectPos[2] - objPos[i][2], 2);
+				float dist = sqrt(x2 + y2 + z2);
+
+				if(dist < selSphereRadius+objPos[i][4]) {//if object is in range
+					if(dist < closestDist) {
+						closest = i;
+						closestDist = dist;
+					}
+				}
+			} //end for each object
+			if (closest != -1) {
+				selected = closest;
+			}
+		}//end else
+	} //end left-click
 } //end mouse
 
 
@@ -3032,7 +3032,7 @@ void oldMouse(int butt, int state, int x,  int y) {
 	}
 } //end mouse
 
-// Changes the temporary view rotation while the left mouse button is pressed.
+// Changes the temporary view rotation when the mouse moves
 // The temporary rotation angle is proportional to the distance of the mouse
 // pointer from the starting click point.
 void motion(int x, int y) {
@@ -3049,7 +3049,7 @@ void motion(int x, int y) {
 } //end motion
 
 
-//sets key press states to true when the key gets pressed
+//sets the key press states to true when the key gets pressed
 void keyboard(unsigned char key, int x, int y) {
    	if(key == 'a') a_state = 1;		//strafe left
    	if(key == 'd') d_state = 1;		//strafe right
@@ -3207,7 +3207,8 @@ void fireJitterTimer(int value) {
 	if(fireTexNum>9) fireTexNum = 0;
 	glutTimerFunc(100, fireJitterTimer, 1);
 }
-//controls the fire flickering effect
+
+//switches out hte fire animation frames
 void fireTimer(int value) {
 	// fireJitter = (rand()%20)/20.0;
 	// fireKc = (rand()%20)/140.0 + 0.2;
