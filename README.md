@@ -10,6 +10,10 @@
 ###Objective:
 This project will be a first-person exploration/thriller/horror game.
 
+click on the door keypad ot unlock the doors in the mansion.
+click on a  door to open it.
+click on the key or mace to pick it up.
+
 
 ###Directions:
 
@@ -19,8 +23,7 @@ This project will be a first-person exploration/thriller/horror game.
  		[d] strafe right
 
  		[mouse click & drag] look around
- 		OR 		[q] look left
- 				[e] look right
+ 		[left-click] pick up objects, open doors or interact with the keypad
 
  		[spacebar] 	jump
    	   	   [h]		show / hide help menu
@@ -50,26 +53,8 @@ This project will be a first-person exploration/thriller/horror game.
 - Because there will be lighting from various sources we will need to also render shadows.
 - We will have a mirror
 
-####Revision  4-28-14:  
-- only building 2 rooms  
-- no shadows  
-- small number of object. ~4  
-- model the player in reflection  
-
-
-####objects to model
-- baseball bat
-- vase
-- painting
-- fireplace 
-- window
-- mirror
-- chair
-- table
-- shelf
-- door
-- safe
-- key
-- torch
-- scroll
-- painting pieces 1-3
+####Revision  4-28-14:
+- only building 2 rooms
+- no shadows
+- small number of object. ~4
+- model the player in reflection

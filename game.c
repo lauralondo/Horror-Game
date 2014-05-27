@@ -1,7 +1,10 @@
-/*
- *	[Horror Game]
+/* Paul Nguyen, Monica Ramakrishnan, Laura Londo
+ * Horror Game
  *
- *	[description]
+ * A haunted mansion in OpenGL.
+ * click on the door keypad ot unlock the doors in the mansion.
+ * click on a  door to open it.
+ * click on the key or mace to pick it up.
  *
  * 	Directions:
  *		[w] move forward
@@ -9,12 +12,11 @@
  *		[a] strafe left
  *		[d] strafe right
  *
- *		[mouse click & drag] look around
- *		OR 		[q] look left
- *				[e] look right      (but really, its much nicer with the mouse)
+ *		[mouse] look around
+ *		[left-click] pickup objects or open doors
  *
  *		[spacebar] 	jump
- *  	   [h]		show / hide help menu
+ *  	   [h]		show / hide menu
  *		  [esc]		quit
  */
 
@@ -30,11 +32,11 @@
 #define groundSize 20 		//size of the ground grid
 #define waitTime 16 		//millisecond wait between redisplays
 #define movementSpeed 0.25 	//player movement speed
-#define numTextures 38
+#define numTextures 41
 
-#define numObjs 2
-#define KEY 0
-#define MACE 1
+#define numObjs 2 //number of objects that can be picked up
+#define KEY 0     //object number for the key
+#define MACE 1    //object number for the mace
 
 
 int textures[numTextures];	//the loaded textures
@@ -82,8 +84,12 @@ float room2DoorRot = 0;
 int door1Closing = 0;
 int door2Closing = 0;
 
+//keypad for unlocking doors
+int keypadSelect[3] = {13,3.2,-5};
+int keypadSelRadius = 1;
+int doorUnlocked = 0;
 
-float xpos = -17, ypos=0, zpos = 0;				//camera position
+float xpos = 0, ypos=0, zpos = 0;				//camera position
 float xrot=0, yrot=90;							//camera angle
 float xrotChange, yrotChange = 0;				//camera view attributes
 
@@ -96,7 +102,7 @@ float jumpSpeed=0;								//jump height increasing
 
 int helpMenu = 0;								//true if displaying menu
 
-GLUquadricObj *qobj;
+GLUquadricObj *qobj;        //used for making glu shapes
 
 float fireKc = 0;			//modifier for fire light
 float fireJitter = 0;		//offset position of fire light
@@ -264,16 +270,19 @@ void initTex(void) {
 	LoadTex(textures[32], "textures/eight.bmp");
 	LoadTex(textures[33], "textures/nine.bmp");
 	LoadTex(textures[34], "textures/zero.bmp");
-	LoadTex(textures[35], "textures/mirror2.bmp");
-	LoadTex(textures[36], "textures/mirror3.bmp");
-	LoadTex(textures[37], "textures/mirrorBroken.bmp");
+	LoadTex(textures[35], "textures/green.bmp");
+	LoadTex(textures[36], "textures/red.bmp");
+	LoadTex(textures[37], "textures/mirror2.bmp");
+	LoadTex(textures[38], "textures/mirror3.bmp");
+	LoadTex(textures[39], "textures/mirrorBroken.bmp");
+	LoadTex(textures[40], "textures/forest.bmp");
 } //end initTex
 
 //define the current drawing material
 void material(float red, float green, float blue, float alpha, float shine) {
 	float mat_specular[]={red, green, blue, alpha};
 	float mat_diffuse[] ={red, green, blue, alpha};
-	float mat_ambient[] ={0,0,0,alpha};//{red, green, blue, 1.0};
+	float mat_ambient[] ={0,0,0,alpha};
 	float mat_shininess={shine};
 
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
@@ -612,7 +621,16 @@ void texCircle(int segments) {
 	}
 } //end texCircle
 
-
+void defaultMaterial(void) {
+	float mat_specular[]={0.9, 0.9, 0.5, 1.0};
+	float mat_diffuse[] ={0.7, 0.5, 0.05, 1.0};
+	float mat_ambient[] ={0.1, 0.05, 0.01, 1.0};
+	float mat_shininess={90};
+	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+    glMaterialf(GL_FRONT, GL_SHININESS, mat_shininess);
+}
 
 
 
@@ -1029,7 +1047,7 @@ void fireplace(void) {
 		glTexCoord2f(0.14, 0.01);  glVertex3f(0.6,0.0,0.0);
 		glTexCoord2f(0.14, 0.18);  glVertex3f(0.6,0.7,0.0);
 		glTexCoord2f(0.01, 0.18);   glVertex3f(0.0,0.7,0.0);
-		glEnd();
+	glEnd();
 	glPopMatrix();
 	// mantle left side
 	glPushMatrix();
@@ -1040,7 +1058,7 @@ void fireplace(void) {
 		glTexCoord2f(0.14, 0.01);  glVertex3f(0.6,0.0,0.0);
 		glTexCoord2f(0.14, 0.18);  glVertex3f(0.6,0.7,0.0);
 		glTexCoord2f(0.01, 0.18);   glVertex3f(0.0,0.7,0.0);
-		glEnd();
+	glEnd();
 	glPopMatrix();
 	//mantle front
 	glPushMatrix();
@@ -2202,7 +2220,7 @@ void mirror(void) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	material(4,3,1,0.5,30);
 
-	glBindTexture(GL_TEXTURE_2D, textures[35]);
+	glBindTexture(GL_TEXTURE_2D, textures[37]);
 	glPushMatrix();
 	glTranslatef(0.15,2,2);
 	glRotatef(-90,0,1,0);
@@ -2517,17 +2535,17 @@ void window(void) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//material(8,6,2,0.25,60);
-	//glBindTexture(GL_TEXTURE_2D, textures[36]);
+	//glBindTexture(GL_TEXTURE_2D, textures[38]);
 
 	for(int i=0; i<16; i+=4) {
 		for (int j=0; j<12; j+=3) {
 			if( i==12 && j==9   ||   i==4 && j==3 ) {
-				glBindTexture(GL_TEXTURE_2D, textures[37]);
+				glBindTexture(GL_TEXTURE_2D, textures[39]);
 				material(8,6,2,0.4,60);
 			}
 			else {
 				material(8,6,2,0.25,60);
-				glBindTexture(GL_TEXTURE_2D, textures[36]);
+				glBindTexture(GL_TEXTURE_2D, textures[38]);
 			}
 			glPushMatrix();
 			glTranslatef(0.15,2+j,2+i);
@@ -3069,8 +3087,8 @@ void hallway(void) {
 //keypad
 void keypad(void){
 	//set material
-	float mat_specular[]={0.9, 0.9, 0.9, 1.0};
-	float mat_diffuse[] ={0.9, 0.9, 0.9, 1.0};
+	float mat_specular[]={0.7, 0.7, 0.7, 1.0};
+	float mat_diffuse[] ={0.6, 0.6, 0.6, 1.0};
 	float mat_ambient[] ={0.1, 0.05, 0.01, 1.0};
 	float mat_shininess={90};
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
@@ -3240,20 +3258,66 @@ void keypad(void){
 		glTexCoord2f(1.0, 0.0);   glVertex3f(0.1,0.0,0.0);
 		glEnd();
     glPopMatrix();
+
+
+
+    material(0.2,0.2,0.2,1,10);
+    if(doorUnlocked) {
+    	glDisable(GL_LIGHTING);
+    }
+    glPushMatrix();
+    glTranslatef(0.25,3.15,0.15);
+    glRotatef(-90,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, textures[35]);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+		glTexCoord2f(0.0, 1.0);  glVertex3f(0.0,0.1,0.0);
+		glTexCoord2f(1.0, 1.0);  glVertex3f(0.1,0.1,0.0);
+		glTexCoord2f(1.0, 0.0);   glVertex3f(0.1,0.0,0.0);
+		glEnd();
+    glPopMatrix();
+    glEnable(GL_LIGHTING);
+
+    if(!doorUnlocked) {
+    	glDisable(GL_LIGHTING);
+    }
+    glPushMatrix();
+    glTranslatef(0.25,3.15,0.0);
+    glRotatef(-90,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, textures[36]);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+		glTexCoord2f(0.0, 1.0);  glVertex3f(0.0,0.1,0.0);
+		glTexCoord2f(1.0, 1.0);  glVertex3f(0.1,0.1,0.0);
+		glTexCoord2f(1.0, 0.0);   glVertex3f(0.1,0.0,0.0);
+		glEnd();
+    glPopMatrix();
+    glEnable(GL_LIGHTING);
+}
+
+void outWindow(void) {
+	glDisable(GL_LIGHTING);
+	glBindTexture(GL_TEXTURE_2D, textures[40]);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+		glTexCoord2f(0.0, 1.0);   glVertex3f(0.0,30.0,0.0);
+		glTexCoord2f(1.0, 1.0);   glVertex3f(50.0,30.0,0.0);
+		glTexCoord2f(1.0, 0.0);   glVertex3f(50.0,0.0,0.0);
+	glEnd();
+	material(0,0,0,1,0);
+	glBegin(GL_QUADS);
+		glVertex3f(-30.0,-50.0,  0.005);
+		glVertex3f(-30.0,50.0,   0.005);
+		glVertex3f(80.0,50.0, 0.005);
+		glVertex3f(80.0,-50.0,0.005);
+	glEnd();
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_LIGHTING);
+	defaultMaterial();
+
 }
 
 
-
-void defaultMaterial(void) {
-	float mat_specular[]={0.9, 0.9, 0.5, 1.0};
-	float mat_diffuse[] ={0.7, 0.5, 0.05, 1.0};
-	float mat_ambient[] ={0.1, 0.05, 0.01, 1.0};
-	float mat_shininess={90};
-	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
-    glMaterialf(GL_FRONT, GL_SHININESS, mat_shininess);
-}
 
 
 
@@ -3329,15 +3393,6 @@ void display(void) {
 	light2(); //hallway light
 	light3(); //torture room chandelier
 
-
-	// glPushMatrix();
- //    glTranslatef(door1Select[0],door1Select[1],door1Select[2]);
- //    glutWireSphere(doorSelRadius,10,10);
- //    glPopMatrix();
- //    glPushMatrix();
- //    glTranslatef(door2Select[0],door2Select[1],door2Select[2]);
- //    glutWireSphere(doorSelRadius,10,10);
- //    glPopMatrix();
 
 
 	glEnable(GL_LIGHTING);
@@ -3574,6 +3629,8 @@ void display(void) {
 		glRotatef(90,0,1,0);
 		portrait();
 		glPopMatrix();
+
+
 	}
 
 	// room 1
@@ -3783,6 +3840,11 @@ void display(void) {
 		glPopMatrix();
 
 
+		glPushMatrix();
+		glTranslatef(25,-5,20);
+		outWindow();
+		glPopMatrix();
+
 		//window
 		glPushMatrix();
 		glTranslatef(33,0.29,10.15);
@@ -3951,38 +4013,52 @@ void mouse(int butt, int state, int x,  int y) {
 	    yrotrad = ((newyrot+90.0) / 180 * PI);
 	    xrotrad = ((newxrot+90.0) / 180 * PI);
 
+	    float x2,y2,z2,dist;
+
 	    selectPos[0] = (sin(xrotrad)) * (cos(yrotrad)) * selRangeRadius - xpos ;
 	    selectPos[1] = (cos(xrotrad)) * selRangeRadius + ypos+3;
 	    selectPos[2] = (sin(xrotrad)) * (sin(yrotrad)) * selRangeRadius -zpos ;
 
+	    //if doors are unlocked, check for a door click
+	    if(doorUnlocked) {
+		    //get distance from player selection sphere to door 1
+		    x2 = pow(selectPos[0] - door1Select[0], 2);
+			y2 = pow(selectPos[1] - door1Select[1], 2);
+			z2 = pow(selectPos[2] - door1Select[2], 2);
+			dist = sqrt(x2 + y2 + z2);
 
-	    //get distance from player selection sphere to door 1
-	    float x2 = pow(selectPos[0] - door1Select[0], 2);
-		float y2 = pow(selectPos[1] - door1Select[1], 2);
-		float z2 = pow(selectPos[2] - door1Select[2], 2);
-		float dist = sqrt(x2 + y2 + z2);
+			if(dist < selSphereRadius+doorSelRadius) {//if office door is in range
+				officeDoorOpen = 1;
+				glutTimerFunc(16, openDoor1, 1);
+			}
 
-		if(dist < selSphereRadius+doorSelRadius) {//if office door is in range
-			officeDoorOpen = 1;
-			glutTimerFunc(16, openDoor1, 1);
+			//get distance from player selection sphere to door 2
+			x2 = pow(selectPos[0] - door2Select[0], 2);
+			y2 = pow(selectPos[1] - door2Select[1], 2);
+			z2 = pow(selectPos[2] - door2Select[2], 2);
+			dist = sqrt(x2 + y2 + z2);
+
+			if(dist < selSphereRadius+doorSelRadius) {//if torture room door is in range
+				tortureRoomDoorOpen = 1;
+				glutTimerFunc(16, openDoor2, 1);
+			}
 		}
+		else { //else ckeck for a keypad click to unlock the doors
+			//get distance from player selection sphere to door 2
+			x2 = pow(selectPos[0] - keypadSelect[0], 2);
+			y2 = pow(selectPos[1] - keypadSelect[1], 2);
+			z2 = pow(selectPos[2] - keypadSelect[2], 2);
+			dist = sqrt(x2 + y2 + z2);
 
-		//get distance from player selection sphere to door 2
-		x2 = pow(selectPos[0] - door2Select[0], 2);
-		y2 = pow(selectPos[1] - door2Select[1], 2);
-		z2 = pow(selectPos[2] - door2Select[2], 2);
-		dist = sqrt(x2 + y2 + z2);
-
-		if(dist < selSphereRadius+doorSelRadius) {//if office door is in range
-			tortureRoomDoorOpen = 1;
-			glutTimerFunc(16, openDoor2, 1);
+			if(dist < selSphereRadius+keypadSelRadius) {//if keypad is in range
+				doorUnlocked = 1;
+			}
 		}
-
 
 
 
 	    //if we are holding something, put it down
-		else if(selected != -1) {
+		if(selected != -1) {
 			objPos[selected][3] = 90;
 			objPos[selected][0] = selectPos[0];
 			objPos[selected][1] = 0;
@@ -4189,6 +4265,26 @@ void timer(int value) {
 			}
 		}
 
+
+
+		//limit walking through wall to the next room
+		if(inOffice() && xpos < -12  &&  !officeDoorOpen) {
+			xpos = -12;
+		}
+		else if (inHallway()) {
+			if(xpos > -14 && !officeDoorOpen){
+				xpos = -14;
+			}
+			else if(xpos < -32 && !tortureRoomDoorOpen){
+				xpos = -32;
+			}
+		}
+		else if(inTortureRoom()  &&  xpos > -34  &&  !tortureRoomDoorOpen) {
+			xpos = -34;
+		}
+
+
+
 		//MONICA, comment this stuff
 		// trap the cursor in the center of the window unless the menu is open
 		// this allows the user to move the mouse to change the viewing angle
@@ -4267,9 +4363,9 @@ int main(int argc, char **argv) {
 
  	glShadeModel (GL_SMOOTH);	//smooth shading
  	light0();					//define the three lights
-   	glEnable(GL_LIGHT0);		//enble all three lights
+   	//glEnable(GL_LIGHT0);		//enble all three lights
    	//glEnable(GL_LIGHT1);
-   	glEnable(GL_LIGHT2);
+   	//glEnable(GL_LIGHT2);
    	glEnable(GL_LIGHTING);		//enable lighting
    	//repositions specular reflections for view change
 	glLightModelf(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
