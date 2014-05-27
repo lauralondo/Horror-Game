@@ -30,7 +30,7 @@
 #define groundSize 20 		//size of the ground grid
 #define waitTime 16 		//millisecond wait between redisplays
 #define movementSpeed 0.25 	//player movement speed
-#define numTextures 24
+#define numTextures 35
 
 #define numObjs 2
 #define KEY 0
@@ -47,9 +47,10 @@ int screenCenterX = 500;
 int screenCenterY = 350;
 
 
-float lightPos[3][3] = { 	{-2.0,  3.5, -6.0},	    //position for each light
+float lightPos[4][3] = { 	{-2.0,  3.5, -6.0},	    //position for each light
 							{-12.5, 1.2, -0.5},
-							{ 0.2,  1.0, -5.0}   };
+							{ 45,  6.0, -0},
+							{ 30,  6.0, -0}   };
 
 float selectPos[3]={0,0,0};
 float selRangeRadius = 3.0;
@@ -58,12 +59,12 @@ float selSphereRadius = 0.8;
                                // X   Y   Z   angle  radius
 float objPos[numObjs][5] = {	{8.0,0.0,0.0,  90.0,  0.7 },	//KEY
 						        {10.5,2.3,9,  90.0,  1 }};	//MACE
-//int selected[numObjs] = {0,0};
+
 int selected = -1;
 int collision = 0;
 
 int officeDoorOpen = 0;
-int door2Open = 0;
+int tortureRoomDoorOpen = 0;
 
 float focusx =0;
 float focusy =0;
@@ -106,7 +107,6 @@ void bitmapText(float x, float y, float z, char* words) {
 	}
 } //end bitmapText
 
-
 //switches to 2D when true to draw on the front of the screen for the menu
 void menuMode(int flag) {
 	if(flag == 1) { //if true, enable 2D mode
@@ -128,7 +128,6 @@ void menuMode(int flag) {
 		glEnable(GL_DEPTH_TEST);
 	}
 } //end menuMode
-
 
 // draws the menu in menu mode if the help menu is toggled on
 void menu(void) {
@@ -165,7 +164,6 @@ void menu(void) {
 		menuMode(0);						//switch back to 3D mode
 	}
 } //end menu
-
 
 //Loads a texture from an external image file in .bmp format.
 void LoadTex(GLuint texture, char *s) {
@@ -243,6 +241,17 @@ void initTex(void) {
 	LoadTex(textures[21], "textures/door1.bmp");
 	LoadTex(textures[22], "textures/castIron.bmp");
 	LoadTex(textures[23], "textures/metalGrip.bmp");
+	LoadTex(textures[24], "textures/steel.bmp");
+	LoadTex(textures[25], "textures/one.bmp");
+	LoadTex(textures[26], "textures/two.bmp");
+	LoadTex(textures[27], "textures/three.bmp");
+	LoadTex(textures[28], "textures/four.bmp");
+	LoadTex(textures[29], "textures/five.bmp");
+	LoadTex(textures[30], "textures/six.bmp");
+	LoadTex(textures[31], "textures/seven.bmp");
+	LoadTex(textures[32], "textures/eight.bmp");
+	LoadTex(textures[33], "textures/nine.bmp");
+	LoadTex(textures[34], "textures/zero.bmp");
 } //end initTex
 
 //define the current drawing material
@@ -291,6 +300,34 @@ void light1(void) {
 	glLightfv (GL_LIGHT1, GL_POSITION, position0);
 	glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, kc); //light fades in distance
 } //end light1
+
+void light2(void) {
+	GLfloat light_ambient0[]={0.3, 0.3, 0.3, 1.0};
+	GLfloat light_diffuse0[]={0.3, 0.3, 0.3, 1.0};
+	GLfloat light_specular0[]={0.3, 0.3, 0.3, 1.0};
+	GLfloat position0[]= {lightPos[2][0], lightPos[2][1], lightPos[2][2], 1.05};
+	float kc = 0;//0.3;
+	/* Set up ambient, diffuse, and specular components for light 0 */
+	glLightfv(GL_LIGHT2, GL_AMBIENT, light_ambient0);
+	glLightfv(GL_LIGHT2, GL_DIFFUSE, light_diffuse0);
+	glLightfv(GL_LIGHT2, GL_SPECULAR, light_specular0);
+	glLightfv (GL_LIGHT2, GL_POSITION, position0);
+	glLightf(GL_LIGHT2, GL_LINEAR_ATTENUATION, kc);
+}
+
+void light3(void) {
+	GLfloat light_ambient0[]={0.2, 0.2, 0.2, 1.0};
+	GLfloat light_diffuse0[]={0.2, 0.2, 0.2, 1.0};
+	GLfloat light_specular0[]={0.2, 0.2, 0.2, 1.0};
+	GLfloat position0[]= {lightPos[3][0], lightPos[3][1], lightPos[3][2], 1.05};
+	float kc = 0;//0.3;
+	/* Set up ambient, diffuse, and specular components for light 0 */
+	glLightfv(GL_LIGHT3, GL_AMBIENT, light_ambient0);
+	glLightfv(GL_LIGHT3, GL_DIFFUSE, light_diffuse0);
+	glLightfv(GL_LIGHT3, GL_SPECULAR, light_specular0);
+	glLightfv (GL_LIGHT3, GL_POSITION, position0);
+	glLightf(GL_LIGHT3, GL_LINEAR_ATTENUATION, kc);
+}
 
 //finds the cross product of two vectors
 void crossProduct(float *save,float a[3], float b[3]) {
@@ -742,13 +779,36 @@ void key(void) {
 
 //safe
 void safe(void) {
+	// //set material
+	float mat_specular[]={0.9, 0.9, 0.9, 1.0};
+	float mat_diffuse[] ={0.6, 0.6, 0.6, 1.0};
+	float mat_ambient[] ={0.1, 0.05, 0.01, 1.0};
+	float mat_shininess={90};
+	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+    glMaterialf(GL_FRONT, GL_SHININESS, mat_shininess);
 	//room 2 safe front
+	glEnable(GL_NORMALIZE); //rescales normals
 	glPushMatrix();
-	glTranslatef(20,2,9);
-    //glScalef(2, 2, 2);
-	glBindTexture(GL_TEXTURE_2D, textures[2]);
-	texRect();
+		glTranslatef(20,2,9);
+	    glScalef(2, 2, 2);
+		glBindTexture(GL_TEXTURE_2D, textures[2]);
+		texRect();
 	glPopMatrix();
+	glDisable(GL_NORMALIZE);
+
+	material(0.2,0.15,0.1,5);
+
+	//set material
+	float mat_specular2[]={0.9, 0.9, 0.5, 1.0};
+	float mat_diffuse2[] ={0.7, 0.5, 0.05, 1.0};
+	float mat_ambient2[] ={0.1, 0.05, 0.01, 1.0};
+	float mat_shininess2={90};
+	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular2);
+    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient2);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse2);
+    glMaterialf(GL_FRONT, GL_SHININESS, mat_shininess2);
 
     //room 2 safe left side
 	glPushMatrix();
@@ -791,7 +851,7 @@ void torch(void){
 	glPopMatrix();
 } //end torch
 
-//macefile:///C:/Users/Laura/Downloads/game.c
+//mace
 void mace(void){
 
 
@@ -841,15 +901,15 @@ void mace(void){
 	    gluQuadricTexture(qobj, GL_FALSE);
 		glDisable(GL_TEXTURE_2D);
 
-		//define material
-		float mat_specular[]={0.4, 0.4, 0.2, 1.0};
-		float mat_diffuse[] ={0.3, 0.2, 0.1, 1.0};
-		float mat_ambient[] ={0.02, 0.0, 0.0, 1.0};
-		float mat_shininess={90};
-		glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-	    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
-	    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
-	    glMaterialf(GL_FRONT, GL_SHININESS, mat_shininess);
+		// //define material
+		// float mat_specular[]={0.4, 0.4, 0.2, 1.0};
+		// float mat_diffuse[] ={0.3, 0.2, 0.1, 1.0};
+		// float mat_ambient[] ={0.02, 0.0, 0.0, 1.0};
+		// float mat_shininess={90};
+		// glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+	 //    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+	 //    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+	 //    glMaterialf(GL_FRONT, GL_SHININESS, mat_shininess);
 
 
 	    //Spike1
@@ -1918,6 +1978,152 @@ void doorFrame(void) {
 	glPopMatrix();
 } //end doorFrame
 
+//door frame
+void mirror(void) {
+	//left
+	glPushMatrix();
+	glTranslatef(0,0,-0.28);
+		//tall
+		glPushMatrix();
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+			glTexCoord2f(0.0, 1.0);   glVertex3f(0.0,4.3,0.0);
+			glTexCoord2f(0.1, 1.0);   glVertex3f(0.3,4.3,0.0);
+			glTexCoord2f(0.1, 0.0);   glVertex3f(0.3,0.0,0.0);
+			glEnd();
+		glPopMatrix();
+		//side
+		glPushMatrix();
+		glTranslatef(0,0,0.3);
+		glRotatef(90,0,1,0);
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+			glTexCoord2f(0.0, 1.0);   glVertex3f(0.0,4.0,0.0);
+			glTexCoord2f(0.1, 1.0);   glVertex3f(0.3,4.3,0.0);
+			glTexCoord2f(0.1, 0.0);   glVertex3f(0.3,0.0,0.0);
+			glEnd();
+		glPopMatrix();
+		//side
+		glPushMatrix();
+		glTranslatef(0.3,0,0);
+		glRotatef(-90,0,1,0);
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+			glTexCoord2f(0.0, 1.0);   glVertex3f(0.0,4.3,0.0);
+			glTexCoord2f(0.1, 1.0);   glVertex3f(0.3,4.0,0.0);
+			glTexCoord2f(0.1, 0.0);   glVertex3f(0.3,0.0,0.0);
+			glEnd();
+		glPopMatrix();
+		//short
+		glPushMatrix();
+		glTranslatef(0.3,0,0.3);
+		glRotatef(180,0,1,0);
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+			glTexCoord2f(0.0, 1.0);   glVertex3f(0.0,4.0,0.0);
+			glTexCoord2f(0.1, 1.0);   glVertex3f(0.3,4.0,0.0);
+			glTexCoord2f(0.1, 0.0);   glVertex3f(0.3,0.0,0.0);
+			glEnd();
+		glPopMatrix();
+	glPopMatrix();
+
+	//right
+	glPushMatrix();
+	glTranslatef(0.3,0,6.28);
+	glRotatef(180,0,1,0);
+		//tall
+		glPushMatrix();
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+			glTexCoord2f(0.0, 1.0);   glVertex3f(0.0,4.3,0.0);
+			glTexCoord2f(0.1, 1.0);   glVertex3f(0.3,4.3,0.0);
+			glTexCoord2f(0.1, 0.0);   glVertex3f(0.3,0.0,0.0);
+			glEnd();
+		glPopMatrix();
+		//side
+		glPushMatrix();
+		glTranslatef(0,0,0.3);
+		glRotatef(90,0,1,0);
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+			glTexCoord2f(0.0, 1.0);   glVertex3f(0.0,4.0,0.0);
+			glTexCoord2f(0.1, 1.0);   glVertex3f(0.3,4.3,0.0);
+			glTexCoord2f(0.1, 0.0);   glVertex3f(0.3,0.0,0.0);
+			glEnd();
+		glPopMatrix();
+		//side
+		glPushMatrix();
+		glTranslatef(0.3,0,0);
+		glRotatef(-90,0,1,0);
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+			glTexCoord2f(0.0, 1.0);   glVertex3f(0.0,4.3,0.0);
+			glTexCoord2f(0.1, 1.0);   glVertex3f(0.3,4.0,0.0);
+			glTexCoord2f(0.1, 0.0);   glVertex3f(0.3,0.0,0.0);
+			glEnd();
+		glPopMatrix();
+		//short
+		glPushMatrix();
+		glTranslatef(0.3,0,0.3);
+		glRotatef(180,0,1,0);
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+			glTexCoord2f(0.0, 1.0);   glVertex3f(0.0,4.0,0.0);
+			glTexCoord2f(0.1, 1.0);   glVertex3f(0.3,4.0,0.0);
+			glTexCoord2f(0.1, 0.0);   glVertex3f(0.3,0.0,0.0);
+			glEnd();
+		glPopMatrix();
+	glPopMatrix();
+
+	//top
+	glPushMatrix();
+	glTranslatef(0,6.28,0);
+	glRotatef(90,1,0,0);
+		//tall
+		glPushMatrix();
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,-0.3,0.0);
+			glTexCoord2f(0.0, 1.0);   glVertex3f(0.0,6.3,0.0);
+			glTexCoord2f(0.1, 1.0);   glVertex3f(0.3,6.3,0.0);
+			glTexCoord2f(0.1, 0.0);   glVertex3f(0.3,-0.3,0.0);
+			glEnd();
+		glPopMatrix();
+		//side
+		glPushMatrix();
+		glTranslatef(0,0,0.3);
+		glRotatef(90,0,1,0);
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+			glTexCoord2f(0.0, 1.0);   glVertex3f(0.0,6.0,0.0);
+			glTexCoord2f(0.1, 1.0);   glVertex3f(0.3,6.3,0.0);
+			glTexCoord2f(0.1, 0.0);   glVertex3f(0.3,-0.3,0.0);
+			glEnd();
+		glPopMatrix();
+		//side
+		glPushMatrix();
+		glTranslatef(0.3,0,0);
+		glRotatef(-90,0,1,0);
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,-0.3,0.0);
+			glTexCoord2f(0.0, 1.0);   glVertex3f(0.0,6.3,0.0);
+			glTexCoord2f(0.1, 1.0);   glVertex3f(0.3,6.0,0.0);
+			glTexCoord2f(0.1, 0.0);   glVertex3f(0.3,0.0,0.0);
+			glEnd();
+		glPopMatrix();
+		//short
+		glPushMatrix();
+		glTranslatef(0.3,0,0.3);
+		glRotatef(180,0,1,0);
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+			glTexCoord2f(0.0, 1.0);   glVertex3f(0.0,6.0,0.0);
+			glTexCoord2f(0.1, 1.0);   glVertex3f(0.3,6.0,0.0);
+			glTexCoord2f(0.1, 0.0);   glVertex3f(0.3,0.0,0.0);
+			glEnd();
+		glPopMatrix();
+	glPopMatrix();
+} //end doorFrame
+
 //door
 void door(int LorR) {
 	glBindTexture(GL_TEXTURE_2D, textures[21]);
@@ -2284,15 +2490,333 @@ void portrait(void){
     glPopMatrix();
 }
 
+void hallway(void) {
+	//Wall Left
+	glPushMatrix();
+		glTranslatef(14,1,5);
+		glRotatef(0,0,1,0);
+		glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
+		tiledTexWall(10,1);
+		glPushMatrix();
+			glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+			glTranslatef(0,2,0);
+			tiledTexWall(2,2);
+		glPopMatrix();
+		glPushMatrix();
+			glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+			glTranslatef(0,6,0);
+			tiledTexWall(10,1);
+		glPopMatrix();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(22,1,5);
+		glRotatef(0,0,1,0);
+		glPushMatrix();
+			glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+			glTranslatef(0,2,0);
+			tiledTexWall(2,2);
+		glPopMatrix();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(30,1,5);
+		glRotatef(0,0,1,0);
+
+		glPushMatrix();
+			glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+			glTranslatef(0,2,0);
+			tiledTexWall(2,2);
+		glPopMatrix();
+	glPopMatrix();
+
+	//Wall Right
+	glPushMatrix();
+		glTranslatef(32,1,-5);
+		glRotatef(180,0,1,0);
+		glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
+		tiledTexWall(10,1);
+		glPushMatrix();
+			glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+			glTranslatef(0,2,0);
+			tiledTexWall(10,3);
+		glPopMatrix();
+	glPopMatrix();
+
+	//Floor
+	glBindTexture(GL_TEXTURE_2D, textures[0]); //wood planks
+	material(1,0.8,0.5,5);                     //material properties
+	glPushMatrix();
+		glTranslatef(14,0,-4);
+		glRotatef(90,1,0,0);
+		tiledTexWall(10,5);
+	glPopMatrix();
+
+	//torches
+	for(int i = 15; i >= 0; i-=5){
+		glPushMatrix();
+		glTranslatef(i+3,3,-9);
+		torch();
+		glPopMatrix();
+	}
+	// for(int i = 15; i >= 0; i-=5){
+	// 	glPushMatrix();
+	// 	glTranslatef(i+3,3, 1);
+	// 	torch();
+	// 	glPopMatrix();
+	// }
+	//Ceiling
+	glBindTexture(GL_TEXTURE_2D, textures[4]);
+	glPushMatrix();
+		glTranslatef(14,8,4);
+		glRotatef(-90,1,0,0);
+		tiledTexWall(10,5);
+	glPopMatrix();
 
 
+	//Connecting Wall
+		//room1 wall 2, right side
+		glPushMatrix();
+			glTranslatef(13.25,1,4);
+			glRotatef(-90,0,1,0);
+			glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
+			tiledTexWall(1,1);
+			glPushMatrix();
+				glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+				glTranslatef(0,2,0);
+				tiledTexWall(1,4);
+			glPopMatrix();
+		glPopMatrix();
 
-// void pickUp() {
-// 	for(int )
-// }
+		//room1 wall 2, left side
+		glPushMatrix();
+			glTranslatef(13.25,1,-4);
+			glRotatef(-90,0,1,0);
+			glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
+			tiledTexWall(1,1);
+			glPushMatrix();
+				glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+				glTranslatef(0,2,0);
+				tiledTexWall(1,4);
+			glPopMatrix();
+		glPopMatrix();
 
+		glPushMatrix();
+			glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+			glTranslatef(13.25,7,-2);
+			glRotatef(-90,0,1,0);
+			tiledTexWall(3,2);
+		glPopMatrix();
 
+		//room1 wall 2, right side
+		glPushMatrix();
+			glTranslatef(32.9,1,4);
+			glRotatef(90,0,1,0);
+			glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
+			tiledTexWall(1,1);
+			glPushMatrix();
+				glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+				glTranslatef(0,2,0);
+				tiledTexWall(1,4);
+			glPopMatrix();
+		glPopMatrix();
 
+		//room1 wall 2, left side
+		glPushMatrix();
+			glTranslatef(32.9,1,-4);
+			glRotatef(90,0,1,0);
+			glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
+			tiledTexWall(1,1);
+			glPushMatrix();
+				glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+				glTranslatef(0,2,0);
+				tiledTexWall(1,4);
+			glPopMatrix();
+		glPopMatrix();
+
+		glPushMatrix();
+			glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
+			glTranslatef(32.9,7,2);
+			glRotatef(90,0,1,0);
+			tiledTexWall(3,2);
+		glPopMatrix();
+}
+
+//keypad
+void keypad(void){
+	//set material
+	float mat_specular[]={0.9, 0.9, 0.9, 1.0};
+	float mat_diffuse[] ={0.9, 0.9, 0.9, 1.0};
+	float mat_ambient[] ={0.1, 0.05, 0.01, 1.0};
+	float mat_shininess={90};
+	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+    glMaterialf(GL_FRONT, GL_SHININESS, mat_shininess);
+
+	//glEnable(GL_TEXTURE_2D);
+    glPushMatrix();
+    glTranslatef(0,3,0);
+    glRotatef(-90,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, textures[24]);
+    texRect2(0.4,0.5);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.2,3,0);
+    glRotatef(-90,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, textures[24]);
+    texRect2(0.4,0.5);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.1,3,0.4);
+    glRotatef(-90,0,0,0);
+    glBindTexture(GL_TEXTURE_2D, textures[24]);
+    texRect2(0.1,0.5);
+    glPopMatrix();
+
+	glPushMatrix();
+    glTranslatef(0.1,3,-0.4);
+    glRotatef(-90,0,0,0);
+    glBindTexture(GL_TEXTURE_2D, textures[24]);
+    texRect2(0.1,0.5);
+    glPopMatrix();
+
+	glPushMatrix();
+    glTranslatef(0.1,3.5,0);
+    glRotatef(-90,1,0,0);
+    glBindTexture(GL_TEXTURE_2D, textures[24]);
+    texRect2(0.1,0.4);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.1,2.5,0);
+    glRotatef(-90,1,0,0);
+    glBindTexture(GL_TEXTURE_2D, textures[24]);
+    texRect2(0.1,0.4);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.25,3,0.15);
+    glRotatef(-90,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, textures[25]);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+		glTexCoord2f(0.0, 1.0);  glVertex3f(0.0,0.1,0.0);
+		glTexCoord2f(1.0, 1.0);  glVertex3f(0.1,0.1,0.0);
+		glTexCoord2f(1.0, 0.0);   glVertex3f(0.1,0.0,0.0);
+		glEnd();
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.25,3,0.0);
+    glRotatef(-90,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, textures[26]);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+		glTexCoord2f(0.0, 1.0);  glVertex3f(0.0,0.1,0.0);
+		glTexCoord2f(1.0, 1.0);  glVertex3f(0.1,0.1,0.0);
+		glTexCoord2f(1.0, 0.0);   glVertex3f(0.1,0.0,0.0);
+		glEnd();
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.25,3,-0.15);
+    glRotatef(-90,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, textures[27]);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+		glTexCoord2f(0.0, 1.0);  glVertex3f(0.0,0.1,0.0);
+		glTexCoord2f(1.0, 1.0);  glVertex3f(0.1,0.1,0.0);
+		glTexCoord2f(1.0, 0.0);   glVertex3f(0.1,0.0,0.0);
+		glEnd();
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.25,2.85,0.15);
+    glRotatef(-90,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, textures[28]);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+		glTexCoord2f(0.0, 1.0);  glVertex3f(0.0,0.1,0.0);
+		glTexCoord2f(1.0, 1.0);  glVertex3f(0.1,0.1,0.0);
+		glTexCoord2f(1.0, 0.0);   glVertex3f(0.1,0.0,0.0);
+		glEnd();
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.25,2.85,0.0);
+    glRotatef(-90,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, textures[29]);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+		glTexCoord2f(0.0, 1.0);  glVertex3f(0.0,0.1,0.0);
+		glTexCoord2f(1.0, 1.0);  glVertex3f(0.1,0.1,0.0);
+		glTexCoord2f(1.0, 0.0);   glVertex3f(0.1,0.0,0.0);
+		glEnd();
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.25,2.85,-0.15);
+    glRotatef(-90,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, textures[30]);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+		glTexCoord2f(0.0, 1.0);  glVertex3f(0.0,0.1,0.0);
+		glTexCoord2f(1.0, 1.0);  glVertex3f(0.1,0.1,0.0);
+		glTexCoord2f(1.0, 0.0);   glVertex3f(0.1,0.0,0.0);
+		glEnd();
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.25,2.7,0.15);
+    glRotatef(-90,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, textures[31]);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+		glTexCoord2f(0.0, 1.0);  glVertex3f(0.0,0.1,0.0);
+		glTexCoord2f(1.0, 1.0);  glVertex3f(0.1,0.1,0.0);
+		glTexCoord2f(1.0, 0.0);   glVertex3f(0.1,0.0,0.0);
+		glEnd();
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.25,2.7,0.0);
+    glRotatef(-90,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, textures[32]);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+		glTexCoord2f(0.0, 1.0);  glVertex3f(0.0,0.1,0.0);
+		glTexCoord2f(1.0, 1.0);  glVertex3f(0.1,0.1,0.0);
+		glTexCoord2f(1.0, 0.0);   glVertex3f(0.1,0.0,0.0);
+		glEnd();
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.25,2.7,-0.15);
+    glRotatef(-90,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, textures[33]);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+		glTexCoord2f(0.0, 1.0);  glVertex3f(0.0,0.1,0.0);
+		glTexCoord2f(1.0, 1.0);  glVertex3f(0.1,0.1,0.0);
+		glTexCoord2f(1.0, 0.0);   glVertex3f(0.1,0.0,0.0);
+		glEnd();
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.25,2.55,0.0);
+    glRotatef(-90,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, textures[34]);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0);   glVertex3f(0.0,0.0,0.0);
+		glTexCoord2f(0.0, 1.0);  glVertex3f(0.0,0.1,0.0);
+		glTexCoord2f(1.0, 1.0);  glVertex3f(0.1,0.1,0.0);
+		glTexCoord2f(1.0, 0.0);   glVertex3f(0.1,0.0,0.0);
+		glEnd();
+    glPopMatrix();
+}
 
 //______________________________________________________________________________
 //================================= CALLBACKS ==================================
@@ -2306,14 +2830,35 @@ void display(void) {
  	glDisable(GL_TEXTURE_2D);
  	glEnable(GL_LIGHTING);
 
+ 	//office lights
  	if(inOffice()  ||  officeDoorOpen) {
  		glEnable(GL_LIGHT1);
+ 		glEnable(GL_LIGHT0);
  	}
  	else {
  		glDisable(GL_LIGHT1);
+ 		glDisable(GL_LIGHT0);
+ 	}
+
+ 	//torture room lights
+ 	if(inTortureRoom()  ||  tortureRoomDoorOpen) {
+ 		glEnable(GL_LIGHT2);
+ 	}
+ 	else{
+ 		glDisable(GL_LIGHT2);
+ 	}
+
+ 	//hallway lights
+ 	if (inHallway() ||  officeDoorOpen  || tortureRoomDoorOpen) {
+ 		glEnable(GL_LIGHT3);
+ 	}
+ 	else {
+ 		glDisable(GL_LIGHT3);
  	}
 
 
+
+ 	//the held item
  	if(selected == KEY) {
 		glPushMatrix();
 		glTranslatef(0.8,-0.2,-1);
@@ -2328,6 +2873,7 @@ void display(void) {
 		glPopMatrix();
 	}
 
+
  	glDisable(GL_LIGHTING);
 
  	//view changes
@@ -2339,6 +2885,8 @@ void display(void) {
 
 	light0(); // large light
 	light1(); // fireplace
+	light2();
+	light3();
 
 
 	glEnable(GL_LIGHTING);
@@ -2407,13 +2955,29 @@ void display(void) {
 	// allows texture lighting
 	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
+
 	//safe
 	glPushMatrix();
-	glTranslatef(-10,0,0);
-	//safe();
+	glTranslatef(30,0,0);
+	glRotatef(180,0,1,0);
+	safe();
 	glPopMatrix();
 
+	//keypad
+	glPushMatrix();
+	glTranslatef(13,0,-5);
+	glRotatef(180,0,1,0);
+	keypad();
+	glPopMatrix();
 
+	float mat_specular[]={0.9, 0.9, 0.5, 1.0};
+	float mat_diffuse[] ={0.7, 0.5, 0.05, 1.0};
+	float mat_ambient[] ={0.1, 0.05, 0.01, 1.0};
+	float mat_shininess={90};
+	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+    glMaterialf(GL_FRONT, GL_SHININESS, mat_shininess);
 
 	//fireplace
 		glPushMatrix();
@@ -2421,6 +2985,10 @@ void display(void) {
 		glRotatef(-90,0,1,0);
 		fireplace();
 		glPopMatrix();
+
+
+
+
 
 	//office room door
 		//door 1 right
@@ -2440,10 +3008,6 @@ void display(void) {
 		glPopMatrix();
 
 
-
-
-
-
 	//torture room door
 		//door right
 		glPushMatrix();
@@ -2459,6 +3023,53 @@ void display(void) {
 		glPushMatrix();
 		glTranslatef(32.83,0,-3);
 		doorFrame();
+		glPopMatrix();
+
+
+
+	// glPushMatrix();
+	// glTranslatef(20,0,5.15);
+	// glRotatef(90,0,1,0);
+	// mirror();
+	// glPopMatrix();
+
+	//mirror doors
+		glPushMatrix();
+		glTranslatef(0,0,10);
+		//office room door
+			//door 1 right
+			glPushMatrix();
+			glTranslatef(13,0,3);
+			door(1);
+			glPopMatrix();
+			//door1 left
+			glPushMatrix();
+			glTranslatef(13,0,0);
+			door(0);
+			glPopMatrix();
+			//door frame
+			glPushMatrix();
+			glTranslatef(12.96,0,-3);
+			doorFrame();
+			glPopMatrix();
+
+
+		//torture room door
+			//door right
+			glPushMatrix();
+			glTranslatef(32.88,0,3);
+			door(1);
+			glPopMatrix();
+			//door left
+			glPushMatrix();
+			glTranslatef(32.88,0,0);
+			door(0);
+			glPopMatrix();
+			//door frame
+			glPushMatrix();
+			glTranslatef(32.83,0,-3);
+			doorFrame();
+			glPopMatrix();
 		glPopMatrix();
 
 
@@ -2678,127 +3289,15 @@ void display(void) {
 
 
 	//Hallway
-		//Wall Left
-			glPushMatrix();
-				glTranslatef(14,1,5);
-				glRotatef(0,0,1,0);
-				glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
-				tiledTexWall(10,1);
-				glPushMatrix();
-					glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-					glTranslatef(0,2,0);
-					tiledTexWall(10,3);
-				glPopMatrix();
-			glPopMatrix();
-		//Wall Right
-			glPushMatrix();
-				glTranslatef(32,1,-5);
-				glRotatef(180,0,1,0);
-				glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
-				tiledTexWall(10,1);
-				glPushMatrix();
-					glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-					glTranslatef(0,2,0);
-					tiledTexWall(10,3);
-				glPopMatrix();
-			glPopMatrix();
-		//Floor
-			glBindTexture(GL_TEXTURE_2D, textures[0]); //wood planks
-			material(1,0.8,0.5,5);                     //material properties
-			glPushMatrix();
-				glTranslatef(14,0,-4);
-				glRotatef(90,1,0,0);
-				tiledTexWall(10,5);
-			glPopMatrix();
+	hallway();
 
-		//torches
-		for(int i = 15; i >= 0; i-=5){
-			glPushMatrix();
-			glTranslatef(i+3,3,-9);
-			torch();
-			glPopMatrix();
-		}
-		for(int i = 15; i >= 0; i-=5){
-			glPushMatrix();
-			glTranslatef(i+3,3, 1);
-			torch();
-			glPopMatrix();
-		}
-		//Ceiling
-		glBindTexture(GL_TEXTURE_2D, textures[4]);
-		glPushMatrix();
-			glTranslatef(14,8,4);
-			glRotatef(-90,1,0,0);
-			tiledTexWall(10,5);
-		glPopMatrix();
+	glPushMatrix();
+	glScalef(1,1,-1);
+	glTranslatef(0,0,-10);
+	hallway();
+	glPopMatrix();
 
 
-		//Connecting Wall
-			//room1 wall 2, right side
-			glPushMatrix();
-				glTranslatef(13.25,1,4);
-				glRotatef(-90,0,1,0);
-				glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
-				tiledTexWall(5,1);
-				glPushMatrix();
-					glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-					glTranslatef(0,2,0);
-					tiledTexWall(5,4);
-				glPopMatrix();
-			glPopMatrix();
-
-			//room1 wall 2, left side
-			glPushMatrix();
-				glTranslatef(13.25,1,-12);
-				glRotatef(-90,0,1,0);
-				glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
-				tiledTexWall(5,1);
-				glPushMatrix();
-					glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-					glTranslatef(0,2,0);
-					tiledTexWall(5,4);
-				glPopMatrix();
-			glPopMatrix();
-
-			glPushMatrix();
-				glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-				glTranslatef(13.25,7,-2);
-				glRotatef(-90,0,1,0);
-				tiledTexWall(3,2);
-			glPopMatrix();
-
-			//room1 wall 2, right side
-			glPushMatrix();
-				glTranslatef(32.9,1,10);
-				glRotatef(90,0,1,0);
-				glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
-				tiledTexWall(4,1);
-				glPushMatrix();
-					glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-					glTranslatef(0,2,0);
-					tiledTexWall(4,4);
-				glPopMatrix();
-			glPopMatrix();
-
-			//room1 wall 2, left side
-			glPushMatrix();
-				glTranslatef(32.9,1,-4);
-				glRotatef(90,0,1,0);
-				glBindTexture(GL_TEXTURE_2D, textures[5]); //wood panels
-				tiledTexWall(4,1);
-				glPushMatrix();
-					glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-					glTranslatef(0,2,0);
-					tiledTexWall(4,4);
-				glPopMatrix();
-			glPopMatrix();
-
-			glPushMatrix();
-				glBindTexture(GL_TEXTURE_2D, textures[3]); //wallpaper
-				glTranslatef(32.9,7,2);
-				glRotatef(90,0,1,0);
-				tiledTexWall(3,2);
-			glPopMatrix();
 
 
 	//room 2
@@ -2918,31 +3417,31 @@ void display(void) {
 	glDisable(GL_TEXTURE_2D);
 
 	/*//selection sphere ===========================
-	float newxrot = xrot + xrotChange;
-	float newyrot = yrot + yrotChange;
+		float newxrot = xrot + xrotChange;
+		float newyrot = yrot + yrotChange;
 
-	float xrotrad, yrotrad;
-    yrotrad = ((newyrot+90.0) / 180 * PI);
-    xrotrad = ((newxrot+90.0) / 180 * PI);
+		float xrotrad, yrotrad;
+	    yrotrad = ((newyrot+90.0) / 180 * PI);
+	    xrotrad = ((newxrot+90.0) / 180 * PI);
 
-    selectPos[0] = (sin(xrotrad)) * (cos(yrotrad)) * selRangeRadius - xpos ;
-    selectPos[1] = (cos(xrotrad)) * selRangeRadius + ypos+3;
-   	selectPos[2] = (sin(xrotrad)) * (sin(yrotrad)) * selRangeRadius -zpos ;
+	    selectPos[0] = (sin(xrotrad)) * (cos(yrotrad)) * selRangeRadius - xpos ;
+	    selectPos[1] = (cos(xrotrad)) * selRangeRadius + ypos+3;
+	   	selectPos[2] = (sin(xrotrad)) * (sin(yrotrad)) * selRangeRadius -zpos ;
 
 
 
-	glPushMatrix();
-	glTranslatef(selectPos[0], selectPos[1], selectPos[2]);
-	//glRotatef(-yrot,0,1,0);
-	//glRotatef(xrot,1,0,0);
+		glPushMatrix();
+		glTranslatef(selectPos[0], selectPos[1], selectPos[2]);
+		//glRotatef(-yrot,0,1,0);
+		//glRotatef(xrot,1,0,0);
 
-	if(collision)
-		glColor3f(1,0,1);
-	else
-		glColor3f(1,1,1);
+		if(collision)
+			glColor3f(1,0,1);
+		else
+			glColor3f(1,1,1);
 
-	glutWireSphere(selSphereRadius,10,10);
-	glPopMatrix();
+		glutWireSphere(selSphereRadius,10,10);
+		glPopMatrix();
 	//*///============================================
 
 
@@ -2982,19 +3481,39 @@ void mouse(int butt, int state, int x,  int y) {
 	    selectPos[1] = (cos(xrotrad)) * selRangeRadius + ypos+3;
 	    selectPos[2] = (sin(xrotrad)) * (sin(yrotrad)) * selRangeRadius -zpos ;
 
+
+	 //    officeDoorSelect[3] = {13,2,1.5};
+	 //    float x2 = pow(selectPos[0] - officeDoorSelect[0], 2);
+		// float y2 = pow(selectPos[1] - officeDoorSelect[1], 2);
+		// float z2 = pow(selectPos[2] - officeDoorSelect[2], 2);
+		// float dist = sqrt(x2 + y2 + z2);
+
+		// if(dist < selSphereRadius+objPos[i][4]) {//if object is in range
+		// 	if(dist < closestDist) {
+		// 		closest = i;
+		// 		closestDist = dist;
+		// 	}
+		// }
+
+
+
+	    //check if the player is opening a door
+	    if(0) { //dor is openaskdjfa;lkd
+
+	    }
 	    //if we are holding something, put it down
-		if(selected != -1) {
+		else if(selected != -1) {
 			objPos[selected][3] = 90;
 			objPos[selected][0] = selectPos[0];
 			objPos[selected][1] = 0;
 			objPos[selected][2] = selectPos[2];
 			selected = -1;
 		}
-		//else, check collision with all interactable objects
+		//else, not holding an item
 		else {
 			int closest = -1; //closest item so far
 			float closestDist = 999;
-			for (int i=0; i<numObjs; i++) {
+			for (int i=0; i<numObjs; i++) { //check collision with all interactable objects
 				float x2 = pow(selectPos[0] - objPos[i][0], 2);
 				float y2 = pow(selectPos[1] - objPos[i][1], 2);
 				float z2 = pow(selectPos[2] - objPos[i][2], 2);
@@ -3262,6 +3781,7 @@ int main(int argc, char **argv) {
  	light0();					//define the three lights
    	glEnable(GL_LIGHT0);		//enble all three lights
    	//glEnable(GL_LIGHT1);
+   	glEnable(GL_LIGHT2);
    	glEnable(GL_LIGHTING);		//enable lighting
    	//repositions specular reflections for view change
 	glLightModelf(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
@@ -3281,7 +3801,7 @@ int main(int argc, char **argv) {
  	initQObj();					//create a quadric object for glu shapes
  	srand(time(NULL));
  	//enableFog(0.5,0.5,0.5,0.05); //fog
- 	enableFog(0.5,0.3,0.1,0.02); //warm
+ 	enableFog(0.5,0.3,0.1,0.04); //warm
 
 
  	//event callbacks
